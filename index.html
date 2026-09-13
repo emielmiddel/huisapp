@@ -264,7 +264,6 @@
 <div id="modalRoot"></div>
 <div id="ctxRoot"></div>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
@@ -604,43 +603,33 @@ function renderDashboard(){
 }
 
 const GOOGLE_CLIENT_ID = "552508346604-ifcqulvr076p5jn9l1if1f0j78ik9q1a.apps.googleusercontent.com";
-const GOOGLE_SCOPE = "https://www.googleapis.com/auth/calendar";
 let googleToken = null;
-let googleTokenClient = null;
 let kolomDatumsHuidig = [];
 let googleAgendaLijst = [];
 let geselecteerdeAgendaIds = [];
 let toeVoegenAgendaId = "primary";
 
-let googlePogingIsHandmatig = false;
-function initGoogle(){
-  if(!window.google || GOOGLE_CLIENT_ID.startsWith("VUL_HIER")) return;
-  googleTokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: GOOGLE_SCOPE,
-    callback: async (resp)=>{
-      if(resp.error){
-        if(googlePogingIsHandmatig) toonDebugFout({message:"Google-koppeling mislukt: "+resp.error});
-        return;
-      }
-      googleToken = resp.access_token;
-      document.getElementById("btnGoogleVerbinden").innerHTML = '<i class="ti ti-check"></i>Verbonden met Google';
-      document.getElementById("btnGoogleVerbinden").style.background = "var(--green-bg)";
-      document.getElementById("btnGoogleVerbinden").style.color = "var(--green)";
+function toonVerbonden(){
+  document.getElementById("btnGoogleVerbinden").innerHTML = '<i class="ti ti-check"></i>Verbonden met Google';
+  document.getElementById("btnGoogleVerbinden").style.background = "var(--green-bg)";
+  document.getElementById("btnGoogleVerbinden").style.color = "var(--green)";
+}
+async function initGoogle(){
+  try{
+    const res = await fetch("/.netlify/functions/google-refresh");
+    const data = await res.json();
+    if(data.connected){
+      googleToken = data.access_token;
+      toonVerbonden();
       await laadGoogleAgendaLijst();
       await haalGoogleAgendaOp();
     }
-  });
-  googlePogingIsHandmatig = false;
-  googleTokenClient.requestAccessToken({prompt: ''});
+  }catch(e){ /* nog niet gekoppeld, gewoon de knop laten staan */ }
 }
+setInterval(()=>{ if(googleToken) initGoogle(); }, 45*60*1000);
+
 document.getElementById("btnGoogleVerbinden").addEventListener("click", ()=>{
-  if(GOOGLE_CLIENT_ID.startsWith("VUL_HIER")){
-    toonDebugFout({message:"Google is nog niet gekoppeld — Emiel moet eerst een Client ID aanmaken."});
-    return;
-  }
-  googlePogingIsHandmatig = true;
-  if(googleTokenClient) googleTokenClient.requestAccessToken();
+  window.location.href = "/.netlify/functions/google-auth-start";
 });
 
 async function laadGoogleAgendaLijst(){
