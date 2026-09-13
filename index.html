@@ -112,6 +112,10 @@
   .agenda-day.today .daylabel .datum{color:var(--teal);}
   .agenda-item{font-size:11px; background:var(--surface); border-radius:6px; padding:5px 6px; margin-bottom:4px;}
   @media(max-width:899px){
+    .taak-item{padding:7px 10px; margin-bottom:6px; gap:8px;}
+    .taak-item .info .naam{font-size:13px;}
+    .taak-item .info .meta{font-size:11px;}
+    .taak-item .cat-icon{width:26px; height:26px; font-size:13px;}
     .agenda-week{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:88px; gap:6px; overflow-x:auto; overflow-y:visible; padding-top:4px; padding-bottom:4px; padding-left:calc(50% - 44px); padding-right:calc(50% - 44px); scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;}
     .agenda-day{min-height:78px; padding:7px 5px; scroll-snap-align:center;}
     .agenda-day .daylabel{font-size:12px;}
@@ -121,10 +125,10 @@
 
   .toolbar{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center;}
   .toolbar select{width:auto; min-width:140px;}
-  .chip{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:500; display:inline-flex; align-items:center; gap:4px;}
+  .chip{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:500; display:inline-flex; align-items:center; gap:4px; user-select:none; -webkit-user-select:none;}
   .status-badge{font-size:11px; padding:4px 10px; border-radius:999px; font-weight:500; white-space:nowrap;}
 
-  .taak-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-left:5px solid transparent; cursor:grab;}
+  .taak-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-left:5px solid transparent; cursor:grab; user-select:none; -webkit-user-select:none;}
   .taak-item .cat-icon{width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
   .taak-item .info{flex:1; min-width:0;}
   .taak-item .info .naam{font-size:14px; font-weight:500;}
@@ -1325,6 +1329,7 @@ async function renderMaand(){
 let vakanties = [];
 let huidigeVakantieId = null;
 let vakantieItems = [];
+let vakantieSortableInstances = [];
 let activiteitSuggesties = [];
 
 async function laadActiviteitSuggesties(){
@@ -1436,7 +1441,7 @@ async function renderVakantiePlanner(){
     <div class="card" style="margin-bottom:16px;">
       <p class="section-title">Activiteiten (sleep naar een dag)</p>
       <div id="vakantieBank" style="display:flex; flex-wrap:wrap; gap:8px;">
-        ${activiteitSuggesties.map(s=>`<div class="chip" data-tekst="${s.tekst}" data-suggestie-id="${s.id}" style="background:var(--surface-2); padding:8px 12px; cursor:grab; font-size:13px;">${s.tekst}<span onclick="verwijderSuggestie(event,'${s.id}')" style="cursor:pointer; margin-left:6px; color:var(--text-muted);"> ✕</span></div>`).join('')}
+        ${activiteitSuggesties.map(s=>`<div class="chip" data-tekst="${s.tekst}" data-suggestie-id="${s.id}" style="background:var(--surface-2); padding:8px 12px; cursor:grab; font-size:13px;">${s.tekst}<span class="verwijder-suggestie-item" onclick="verwijderSuggestie(event,'${s.id}')" style="cursor:pointer; margin-left:6px; color:var(--text-muted);"> ✕</span></div>`).join('')}
       </div>
       <div style="display:flex; gap:8px; margin-top:10px;">
         <input type="text" id="nieuweActiviteitInput" placeholder="Eigen activiteit (blijft bewaard)...">
@@ -1459,17 +1464,22 @@ async function renderVakantiePlanner(){
       </div>
     </div>
   `;
-  new Sortable(document.getElementById('vakantieBank'), {group:{name:'vakantie', pull:'clone', put:false}, sort:false, animation:150});
+  vakantieSortableInstances.forEach(s=>{ try{ s.destroy(); }catch(e){} });
+  vakantieSortableInstances = [];
+  vakantieSortableInstances.push(new Sortable(document.getElementById('vakantieBank'), {group:{name:'vakantie', pull:'clone', put:false}, sort:false, animation:150}));
   document.querySelectorAll('.vakantie-dropzone').forEach(zone=>{
-    new Sortable(zone, {group:'vakantie', animation:150, filter:'.verwijder-vakantie-item', preventOnFilter:false, onAdd: async (evt)=>{
+    vakantieSortableInstances.push(new Sortable(zone, {group:'vakantie', animation:150, filter:'.verwijder-vakantie-item', preventOnFilter:false, onAdd: async (evt)=>{
       const el = evt.item;
       const datum = evt.to.dataset.datum;
       if(!el.dataset.id){
         const tekst = el.dataset.tekst;
+        const oudKruisje = el.querySelector('.verwijder-suggestie-item');
+        if(oudKruisje) oudKruisje.remove();
         const {data:nieuw, error:fout} = await db.from('vakantie_items').insert({vakantie_id: huidigeVakantieId, datum, tekst, volgorde:0}).select().single();
         if(fout){ toonDebugFout(fout); return; }
         el.dataset.id = nieuw.id;
         el.removeAttribute('data-tekst');
+        el.removeAttribute('data-suggestie-id');
         const x = document.createElement('span');
         x.textContent=' ✕';
         x.className='verwijder-vakantie-item';
@@ -1479,7 +1489,7 @@ async function renderVakantiePlanner(){
       } else {
         await db.from('vakantie_items').update({datum}).eq('id', el.dataset.id);
       }
-    }});
+    }}));
   });
 }
 window.verwijderVakantieItem = async function(e, id){
