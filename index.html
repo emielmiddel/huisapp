@@ -18,8 +18,20 @@
     --green:#1B7F2E; --green-bg:#DCF5D0;
     --blue:#185FA5; --blue-bg:#DCEBFB;
   }
+  [data-theme="dark"]{
+    --bg:#15161A; --surface:#1E2025; --surface-2:#26282E;
+    --border:#33353B; --text:#EDEDEE; --text-2:#A8A9AE; --text-muted:#75767C;
+    --teal:#3FD9AE; --teal-bg:#0F3A30;
+    --coral:#FF9466; --coral-bg:#4A2413;
+    --purple:#B0A6FF; --purple-bg:#2E2A57;
+    --pink:#FF8FC2; --pink-bg:#4A1F38;
+    --amber:#FFCB61; --amber-bg:#4A3A0E;
+    --red:#FF8A80; --red-bg:#4A1F1C;
+    --green:#8FDC7A; --green-bg:#1E3E17;
+    --blue:#7FB8F5; --blue-bg:#193049;
+  }
   *{box-sizing:border-box;}
-  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text);}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); transition:background .2s, color .2s;}
   input,select,button{font-family:inherit; font-size:14px;}
   input[type=text],input[type=number],input[type=date],select{width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface);}
   button{cursor:pointer;}
@@ -162,6 +174,7 @@
 <div id="app" class="hidden">
   <header class="topbar">
     <h1><i class="ti ti-home-2"></i>Huis dashboard</h1>
+    <button id="btnThema" style="background:var(--surface-2); border:none; color:var(--text-2); width:34px; height:34px; border-radius:10px; margin-left:auto; margin-right:12px; display:flex; align-items:center; justify-content:center; font-size:16px;"><i class="ti ti-moon"></i></button>
     <span class="who" id="whoLabel" style="cursor:pointer;" title="Tik om uit te loggen"></span>
   </header>
 
@@ -169,23 +182,9 @@
 
   <section id="page-dashboard" class="page active">
     <div id="onbekendBanner"></div>
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-header"><span class="icon-badge" style="background:var(--pink-bg); color:var(--pink);"><i class="ti ti-calendar-week"></i></span><p class="section-title">Deze week</p>
-        <div style="margin-left:auto; position:relative;">
-          <button class="fab" id="btnAgendaKiezer" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;"><i class="ti ti-adjustments"></i>Agenda's</button>
-          <div id="selectGoogleAgenda" class="hidden" style="position:absolute; right:0; top:calc(100% + 6px); background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:6px; z-index:15; min-width:200px; box-shadow:0 6px 20px rgba(0,0,0,.1);"></div>
-        </div>
-        <button class="fab" id="btnGoogleVerbinden" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;"><i class="ti ti-brand-google"></i>Google Agenda verbinden</button>
-      </div>
-      <div style="display:flex; align-items:stretch; gap:6px;">
-        <button style="border:none; background:var(--surface-2); color:var(--text-2); border-radius:10px; width:28px; font-size:18px; flex-shrink:0;" onclick="veranderWeek(-1)" aria-label="Vorige week">‹</button>
-        <div class="agenda-week" id="agendaWeek" style="flex:1;"></div>
-        <button style="border:none; background:var(--surface-2); color:var(--text-2); border-radius:10px; width:28px; font-size:18px; flex-shrink:0;" onclick="veranderWeek(1)" aria-label="Volgende week">›</button>
-      </div>
-      <div style="display:flex; align-items:center; justify-content:center; margin-top:10px;">
-        <button class="fab" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;" id="weekLabel" onclick="gaNaarDezeWeek()"></button>
-      </div>
-      <div class="fab-wrap"><button class="fab" id="btnNieuweAgendaItem" style="background:var(--pink-bg); color:var(--pink);" aria-label="Agenda-item toevoegen"><i class="ti ti-plus"></i>Agenda-item toevoegen</button></div>
+    <div class="card" style="margin-bottom:16px; cursor:pointer;" onclick="schakelPagina('agenda')">
+      <div class="card-header"><span class="icon-badge" style="background:var(--pink-bg); color:var(--pink);"><i class="ti ti-calendar-week"></i></span><p class="section-title">Agenda</p><i class="ti ti-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i></div>
+      <span style="font-size:13px; color:var(--text-2);">Bekijk je week, de maand, of plan een vakantie →</span>
     </div>
 
     <div class="card" style="margin-bottom:16px;">
@@ -208,7 +207,53 @@
 
   <section id="page-agenda" class="page">
     <div class="card-header" style="margin-bottom:16px;"><span class="icon-badge" style="width:38px; height:38px; font-size:19px; background:var(--pink-bg); color:var(--pink);"><i class="ti ti-calendar"></i></span><h2 style="font-size:19px; font-weight:500; margin:0;">Agenda</h2></div>
-    <div class="soon-page"><i class="ti ti-calendar"></i>Vakantieplanner en schoolvakanties komen in de volgende bouwstap.</div>
+
+    <div class="toolbar" style="margin-bottom:16px;">
+      <button class="navitem active" data-sub="week" style="border-radius:10px; background:var(--teal-bg); color:var(--teal); padding:8px 16px;">Week</button>
+      <button class="navitem" data-sub="maand" style="border-radius:10px; padding:8px 16px; color:var(--text-2); background:none; border:none;">Maand</button>
+      <button class="navitem" data-sub="vakantie" style="border-radius:10px; padding:8px 16px; color:var(--text-2); background:none; border:none;">Vakantie</button>
+    </div>
+
+    <div id="agendaSub-week" class="subpage">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><span class="icon-badge" style="background:var(--pink-bg); color:var(--pink);"><i class="ti ti-calendar-week"></i></span><p class="section-title">Deze week</p>
+          <div style="margin-left:auto; position:relative;">
+            <button class="fab" id="btnAgendaKiezer" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;"><i class="ti ti-adjustments"></i>Agenda's</button>
+            <div id="selectGoogleAgenda" class="hidden" style="position:absolute; right:0; top:calc(100% + 6px); background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:6px; z-index:15; min-width:200px; box-shadow:0 6px 20px rgba(0,0,0,.1);"></div>
+          </div>
+          <button class="fab" id="btnGoogleVerbinden" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;"><i class="ti ti-brand-google"></i>Google Agenda verbinden</button>
+        </div>
+        <div style="display:flex; align-items:stretch; gap:6px;">
+          <button style="border:none; background:var(--surface-2); color:var(--text-2); border-radius:10px; width:28px; font-size:18px; flex-shrink:0;" onclick="veranderWeek(-1)" aria-label="Vorige week">‹</button>
+          <div class="agenda-week" id="agendaWeek" style="flex:1;"></div>
+          <button style="border:none; background:var(--surface-2); color:var(--text-2); border-radius:10px; width:28px; font-size:18px; flex-shrink:0;" onclick="veranderWeek(1)" aria-label="Volgende week">›</button>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:center; margin-top:10px;">
+          <button class="fab" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;" id="weekLabel" onclick="gaNaarDezeWeek()"></button>
+        </div>
+        <div class="fab-wrap"><button class="fab" id="btnNieuweAgendaItem" style="background:var(--pink-bg); color:var(--pink);" aria-label="Agenda-item toevoegen"><i class="ti ti-plus"></i>Agenda-item toevoegen</button></div>
+      </div>
+    </div>
+
+    <div id="agendaSub-maand" class="subpage hidden">
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:12px;">
+          <button style="border:none; background:var(--surface-2); color:var(--text-2); border-radius:10px; width:32px; height:32px;" onclick="veranderMaand(-1)">‹</button>
+          <span id="maandLabel" style="font-size:15px; font-weight:500; min-width:140px; text-align:center;"></span>
+          <button style="border:none; background:var(--surface-2); color:var(--text-2); border-radius:10px; width:32px; height:32px;" onclick="veranderMaand(1)">›</button>
+        </div>
+        <div id="maandGrid"></div>
+      </div>
+    </div>
+
+    <div id="agendaSub-vakantie" class="subpage hidden">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><span class="icon-badge" style="background:var(--amber-bg); color:var(--amber);"><i class="ti ti-suitcase"></i></span><p class="section-title">Vakanties</p></div>
+        <div id="vakantieLijst"></div>
+        <div class="fab-wrap"><button class="fab" style="background:var(--amber-bg); color:var(--amber);" id="btnNieuweVakantie"><i class="ti ti-plus"></i>Nieuwe vakantie</button></div>
+      </div>
+      <div id="vakantiePlanner"></div>
+    </div>
   </section>
 
   <section id="page-onderhoud" class="page">
@@ -254,7 +299,7 @@
 
 <nav class="bottomnav hidden" id="bottomnav">
   <button class="navitem active" data-page="dashboard"><i class="ti ti-home"></i><span>Home</span></button>
-  <button class="navitem soon" data-page="agenda"><i class="ti ti-calendar"></i><span>Agenda</span></button>
+  <button class="navitem" data-page="agenda"><i class="ti ti-calendar"></i><span>Agenda</span></button>
   <button class="navitem" data-page="onderhoud"><i class="ti ti-tool"></i><span>Onderhoud</span></button>
   <button class="navitem" data-page="klussen"><i class="ti ti-list-check"></i><span>Klussen</span></button>
   <button class="navitem soon" data-page="spullen"><i class="ti ti-box"></i><span>Spullen</span></button>
@@ -273,7 +318,7 @@ let pinInvoer = "";
 
 const NAV_ITEMS = [
   {page:"dashboard", icon:"ti-home", label:"Home", soon:false},
-  {page:"agenda", icon:"ti-calendar", label:"Agenda", soon:true},
+  {page:"agenda", icon:"ti-calendar", label:"Agenda", soon:false},
   {page:"onderhoud", icon:"ti-tool", label:"Onderhoud", soon:false},
   {page:"klussen", icon:"ti-list-check", label:"Klussen", soon:false},
   {page:"spullen", icon:"ti-box", label:"Spullen", soon:true},
@@ -529,7 +574,7 @@ function renderOnderhoud(){
   let html = "";
   if(sorteer === "naam"){
     const lijst = [...alles].sort((a,b)=>a.naam.localeCompare(b.naam));
-    html = `<div class="card"><div class="sleeplijst-uit">${lijst.length ? lijst.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px; margin:0;">Niets gevonden.</p>`}</div></div>`;
+    html = `<div class="card"><div class="sleeplijst-uit" data-status="__alle__">${lijst.length ? lijst.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px; margin:0;">Niets gevonden.</p>`}</div></div>`;
   } else if(sorteer === "locatie"){
     const perLocatie = {};
     alles.forEach(t=>{ (perLocatie[t.categorie] = perLocatie[t.categorie]||[]).push(t); });
@@ -539,7 +584,7 @@ function renderOnderhoud(){
       return `
         <div class="card" style="margin-bottom:14px;">
           <div class="card-header"><span class="icon-badge" style="background:${info.bg}; color:${info.fg};"><i class="ti ${info.icon}"></i></span><p class="section-title">${cat}</p><span style="margin-left:auto; font-size:12px; color:var(--text-muted);">${lijst.length}</span></div>
-          <div class="sleeplijst-uit">${lijst.map(t=>renderTaakRij(t)).join('')}</div>
+          <div class="sleeplijst-uit" data-status="${cat}">${lijst.map(t=>renderTaakRij(t)).join('')}</div>
         </div>`;
     }).join('');
   } else {
@@ -556,7 +601,7 @@ function renderOnderhoud(){
   }
   document.getElementById("onderhoudLijst").innerHTML = html;
 
-  document.querySelectorAll("#onderhoudLijst .sleeplijst").forEach(el=>{
+  document.querySelectorAll("#onderhoudLijst .sleeplijst, #onderhoudLijst .sleeplijst-uit").forEach(el=>{
     new Sortable(el, {animation:150, handle:".sleep-handle", onEnd:async ()=>{
       const ids = [...el.querySelectorAll("[data-taak-id]")].map(x=>x.dataset.taakId);
       ids.forEach((id,i)=>{ const t = taken.find(t=>t.id===id); if(t) t.volgorde = i; });
@@ -1125,6 +1170,17 @@ document.getElementById("whoLabel").addEventListener("click", ()=>{
   }
 });
 
+function pasThemaToe(thema){
+  document.documentElement.setAttribute("data-theme", thema);
+  document.getElementById("btnThema").innerHTML = thema==="dark" ? '<i class="ti ti-sun"></i>' : '<i class="ti ti-moon"></i>';
+  localStorage.setItem("huisapp-thema", thema);
+}
+document.getElementById("btnThema").addEventListener("click", ()=>{
+  const huidig = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  pasThemaToe(huidig);
+});
+pasThemaToe(localStorage.getItem("huisapp-thema") || "light");
+
 async function init(){
   await laadCategorieen();
   await laadTaken();
@@ -1145,6 +1201,191 @@ async function init(){
     toonApp();
   }
 }
+document.querySelectorAll('#page-agenda .toolbar .navitem').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#page-agenda .toolbar .navitem').forEach(b=>{
+      b.classList.remove('active'); b.style.background='none'; b.style.color='var(--text-2)';
+    });
+    btn.classList.add('active'); btn.style.background='var(--teal-bg)'; btn.style.color='var(--teal)';
+    document.querySelectorAll('#page-agenda .subpage').forEach(p=>p.classList.add('hidden'));
+    document.getElementById('agendaSub-'+btn.dataset.sub).classList.remove('hidden');
+    if(btn.dataset.sub === 'maand') renderMaand();
+    if(btn.dataset.sub === 'vakantie'){ laadVakanties().then(()=>{ renderVakantieLijst(); renderVakantiePlanner(); }); }
+  });
+});
+
+function isoWeekNummer(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - dayNum + 3);
+  const eersteDonderdag = new Date(Date.UTC(date.getUTCFullYear(),0,4));
+  const verschil = date - eersteDonderdag;
+  return 1 + Math.round(verschil / (7*24*3600*1000));
+}
+let maandOffset = 0;
+const MAAND_NAMEN = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+function veranderMaand(delta){ maandOffset += delta; renderMaand(); }
+function renderMaand(){
+  const vandaag = new Date(); vandaag.setHours(0,0,0,0);
+  const basis = new Date(vandaag.getFullYear(), vandaag.getMonth()+maandOffset, 1);
+  document.getElementById('maandLabel').textContent = `${MAAND_NAMEN[basis.getMonth()]} ${basis.getFullYear()}`;
+  const eersteDagWeek = (basis.getDay()+6)%7;
+  const startGrid = new Date(basis); startGrid.setDate(basis.getDate() - eersteDagWeek);
+  const dagenInMaand = new Date(basis.getFullYear(), basis.getMonth()+1, 0).getDate();
+  const totaalCellen = Math.ceil((eersteDagWeek + dagenInMaand) / 7) * 7;
+  let html = `<div style="display:grid; grid-template-columns:32px repeat(7,1fr); gap:4px; font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+    <span></span><span>ma</span><span>di</span><span>wo</span><span>do</span><span>vr</span><span>za</span><span>zo</span>
+  </div>`;
+  for(let w=0; w<totaalCellen/7; w++){
+    const weekStart = new Date(startGrid); weekStart.setDate(startGrid.getDate()+w*7);
+    html += `<div style="display:grid; grid-template-columns:32px repeat(7,1fr); gap:4px; margin-bottom:4px;">`;
+    html += `<span style="font-size:10px; color:var(--text-muted); align-self:center;">${isoWeekNummer(weekStart)}</span>`;
+    for(let d=0; d<7; d++){
+      const dag = new Date(weekStart); dag.setDate(weekStart.getDate()+d);
+      const inMaand = dag.getMonth()===basis.getMonth();
+      const isVandaag = dag.getTime()===vandaag.getTime();
+      html += `<div style="aspect-ratio:1; border-radius:8px; background:${isVandaag?'var(--teal-bg)':'var(--surface-2)'}; display:flex; align-items:center; justify-content:center; font-size:12px; color:${inMaand?(isVandaag?'var(--teal)':'var(--text)'):'var(--text-muted)'}; font-weight:${isVandaag?'600':'400'};">${dag.getDate()}</div>`;
+    }
+    html += `</div>`;
+  }
+  document.getElementById('maandGrid').innerHTML = html;
+}
+
+let vakanties = [];
+let huidigeVakantieId = null;
+let vakantieItems = [];
+const VAKANTIE_SUGGESTIES = ["Strand","Museum bezoeken","Wandelen","Fietsen","Terrasje","Uit eten","Boodschappen","Zwemmen","Niets te doen"];
+
+async function laadVakanties(){
+  const {data, error} = await db.from('vakanties').select('*').order('start_datum');
+  if(error){ toonDebugFout(error); return; }
+  vakanties = data;
+}
+function renderVakantieLijst(){
+  const el = document.getElementById('vakantieLijst');
+  el.innerHTML = vakanties.length ? vakanties.map(v=>`
+    <div class="task-row" style="cursor:pointer; ${v.id===huidigeVakantieId?'border-left-color:var(--amber);':''}" onclick="selecteerVakantie('${v.id}')">
+      <span class="icon" style="background:var(--amber-bg); color:var(--amber);"><i class="ti ti-suitcase"></i></span>
+      <span class="label">${v.naam} — ${formatDatumNL(v.start_datum)} t/m ${formatDatumNL(v.eind_datum)}</span>
+    </div>
+  `).join('') : `<p style="color:var(--text-muted); font-size:13px;">Nog geen vakanties gepland.</p>`;
+}
+window.selecteerVakantie = function(id){
+  huidigeVakantieId = id;
+  renderVakantieLijst();
+  renderVakantiePlanner();
+};
+document.getElementById('btnNieuweVakantie').addEventListener('click', ()=>{
+  toonModal(`
+    <h3>Nieuwe vakantie</h3>
+    <label>Naam</label>
+    <input type="text" id="nieuweVakantieNaam" placeholder="bv. Zomervakantie Frankrijk">
+    <label>Van</label>
+    <input type="date" id="nieuweVakantieStart">
+    <label>Tot en met</label>
+    <input type="date" id="nieuweVakantieEind">
+    <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
+    <div class="modal-actions">
+      <button onclick="sluitModal()">Annuleren</button>
+      <button class="primary" onclick="opslaanNieuweVakantie()">Aanmaken</button>
+    </div>
+  `);
+});
+window.opslaanNieuweVakantie = async function(){
+  const naam = document.getElementById('nieuweVakantieNaam').value.trim();
+  const start = document.getElementById('nieuweVakantieStart').value;
+  const eind = document.getElementById('nieuweVakantieEind').value;
+  if(!naam || !start || !eind){ document.getElementById('modalError').textContent = 'Vul alles in.'; return; }
+  const {data, error} = await db.from('vakanties').insert({naam, start_datum:start, eind_datum:eind}).select().single();
+  if(error){ document.getElementById('modalError').textContent = 'Opslaan mislukt.'; return; }
+  vakanties.push(data);
+  huidigeVakantieId = data.id;
+  renderVakantieLijst();
+  renderVakantiePlanner();
+  sluitModal();
+};
+
+async function renderVakantiePlanner(){
+  const wrap = document.getElementById('vakantiePlanner');
+  if(!huidigeVakantieId){ wrap.innerHTML = `<p style="color:var(--text-muted); font-size:13px; padding:0 4px;">Kies of maak een vakantie hierboven om per dag te gaan plannen.</p>`; return; }
+  const vakantie = vakanties.find(v=>v.id===huidigeVakantieId);
+  const {data, error} = await db.from('vakantie_items').select('*').eq('vakantie_id', huidigeVakantieId);
+  if(error){ toonDebugFout(error); return; }
+  vakantieItems = data;
+
+  const dagen = [];
+  const cursor = new Date(vakantie.start_datum);
+  const eind = new Date(vakantie.eind_datum);
+  while(cursor <= eind){ dagen.push(new Date(cursor)); cursor.setDate(cursor.getDate()+1); }
+  const DAGNAMEN = ["zo","ma","di","wo","do","vr","za"];
+
+  wrap.innerHTML = `
+    <div class="card" style="margin-bottom:16px;">
+      <p class="section-title">Activiteiten (sleep naar een dag)</p>
+      <div id="vakantieBank" style="display:flex; flex-wrap:wrap; gap:8px;">
+        ${VAKANTIE_SUGGESTIES.map(s=>`<div class="chip" data-tekst="${s}" style="background:var(--surface-2); padding:8px 12px; cursor:grab; font-size:13px;">${s}</div>`).join('')}
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <input type="text" id="nieuweActiviteitInput" placeholder="Eigen activiteit...">
+        <button class="add-btn" onclick="voegBankActiviteitToe()"><i class="ti ti-plus"></i></button>
+      </div>
+    </div>
+    <div class="card">
+      <p class="section-title">${vakantie.naam}</p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px;">
+        ${dagen.map(d=>{
+          const iso = lokaleDatumString(d);
+          const dagItems = vakantieItems.filter(i=>i.datum===iso);
+          return `<div>
+            <div style="font-size:12px; font-weight:500; margin-bottom:6px;">${DAGNAMEN[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}</div>
+            <div class="vakantie-dropzone" data-datum="${iso}" style="min-height:90px; background:var(--surface-2); border-radius:8px; padding:6px; display:flex; flex-direction:column; gap:4px;">
+              ${dagItems.map(i=>`<div class="chip" data-id="${i.id}" style="background:var(--surface); padding:6px 8px; cursor:grab; font-size:12px;">${i.tekst}<span onclick="verwijderVakantieItem(event,'${i.id}')" style="cursor:pointer; margin-left:6px; color:var(--red);"> ✕</span></div>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  new Sortable(document.getElementById('vakantieBank'), {group:{name:'vakantie', pull:'clone', put:false}, sort:false, animation:150});
+  document.querySelectorAll('.vakantie-dropzone').forEach(zone=>{
+    new Sortable(zone, {group:'vakantie', animation:150, onAdd: async (evt)=>{
+      const el = evt.item;
+      const datum = evt.to.dataset.datum;
+      if(!el.dataset.id){
+        const tekst = el.dataset.tekst;
+        const {data:nieuw, error:fout} = await db.from('vakantie_items').insert({vakantie_id: huidigeVakantieId, datum, tekst, volgorde:0}).select().single();
+        if(fout){ toonDebugFout(fout); return; }
+        el.dataset.id = nieuw.id;
+        el.removeAttribute('data-tekst');
+        const x = document.createElement('span');
+        x.textContent=' ✕';
+        x.style.cssText='cursor:pointer; margin-left:6px; color:var(--red);';
+        x.onclick = (e)=>verwijderVakantieItem(e, nieuw.id);
+        el.appendChild(x);
+      } else {
+        await db.from('vakantie_items').update({datum}).eq('id', el.dataset.id);
+      }
+    }});
+  });
+}
+window.verwijderVakantieItem = async function(e, id){
+  e.stopPropagation();
+  await db.from('vakantie_items').delete().eq('id', id);
+  renderVakantiePlanner();
+};
+window.voegBankActiviteitToe = function(){
+  const input = document.getElementById('nieuweActiviteitInput');
+  const tekst = input.value.trim();
+  if(!tekst) return;
+  const bank = document.getElementById('vakantieBank');
+  const chip = document.createElement('div');
+  chip.className='chip'; chip.dataset.tekst=tekst;
+  chip.style.cssText='background:var(--surface-2); padding:8px 12px; cursor:grab; font-size:13px;';
+  chip.textContent=tekst;
+  bank.appendChild(chip);
+  input.value='';
+};
+
 init();
 </script>
 </body>
