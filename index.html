@@ -19,16 +19,16 @@
     --blue:#185FA5; --blue-bg:#DCEBFB;
   }
   [data-theme="dark"]{
-    --bg:#15161A; --surface:#1E2025; --surface-2:#26282E;
-    --border:#33353B; --text:#EDEDEE; --text-2:#A8A9AE; --text-muted:#75767C;
-    --teal:#3FD9AE; --teal-bg:#0F3A30;
-    --coral:#FF9466; --coral-bg:#4A2413;
-    --purple:#B0A6FF; --purple-bg:#2E2A57;
-    --pink:#FF8FC2; --pink-bg:#4A1F38;
-    --amber:#FFCB61; --amber-bg:#4A3A0E;
-    --red:#FF8A80; --red-bg:#4A1F1C;
-    --green:#8FDC7A; --green-bg:#1E3E17;
-    --blue:#7FB8F5; --blue-bg:#193049;
+    --bg:#2A2724; --surface:#37332F; --surface-2:#433D37;
+    --border:#544D45; --text:#F2EEE8; --text-2:#C7BFB5; --text-muted:#978C80;
+    --teal:#5FDCB4; --teal-bg:#2E4A3F;
+    --coral:#FFA366; --coral-bg:#5A3823;
+    --purple:#C2B4FF; --purple-bg:#413A5E;
+    --pink:#FF9BC7; --pink-bg:#5A3548;
+    --amber:#FFC773; --amber-bg:#5C4726;
+    --red:#FF9B8E; --red-bg:#5A332C;
+    --green:#A3E08A; --green-bg:#3A4E2E;
+    --blue:#8FC1F5; --blue-bg:#2E415A;
   }
   *{box-sizing:border-box;}
   body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); transition:background .2s, color .2s;}
@@ -153,7 +153,7 @@
   .onbekend-banner i:first-child{font-size:18px;}
 
   .fab-wrap{display:flex; justify-content:center; margin-top:10px;}
-  .fab{display:flex; align-items:center; gap:6px; padding:10px 18px; border-radius:999px; border:none; font-size:13px; font-weight:500; background:var(--surface-2); color:var(--text-2);}
+  .fab{display:flex; align-items:center; gap:6px; padding:9px 17px; border-radius:999px; border:1.5px solid currentColor; font-size:13px; font-weight:600; background:var(--surface-2); color:var(--text-2);}
   .fab i{font-size:15px;}
   .fab:active{transform:scale(.97);}
 </style>
@@ -174,7 +174,7 @@
 <div id="app" class="hidden">
   <header class="topbar">
     <h1><i class="ti ti-home-2"></i>Huis dashboard</h1>
-    <button id="btnThema" style="background:var(--surface-2); border:none; color:var(--text-2); width:34px; height:34px; border-radius:10px; margin-left:auto; margin-right:12px; display:flex; align-items:center; justify-content:center; font-size:16px;"><i class="ti ti-moon"></i></button>
+    <button id="btnThema" class="fab" style="background:var(--surface-2); color:var(--text-2); margin-left:auto; margin-right:12px; font-size:13px;"><i class="ti ti-moon"></i>Donker</button>
     <span class="who" id="whoLabel" style="cursor:pointer;" title="Tik om uit te loggen"></span>
   </header>
 
@@ -182,10 +182,7 @@
 
   <section id="page-dashboard" class="page active">
     <div id="onbekendBanner"></div>
-    <div class="card" style="margin-bottom:16px; cursor:pointer;" onclick="schakelPagina('agenda')">
-      <div class="card-header"><span class="icon-badge" style="background:var(--pink-bg); color:var(--pink);"><i class="ti ti-calendar-week"></i></span><p class="section-title">Agenda</p><i class="ti ti-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i></div>
-      <span style="font-size:13px; color:var(--text-2);">Bekijk je week, de maand, of plan een vakantie →</span>
-    </div>
+    <div id="agendaWidgetSlotHome"></div>
 
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header"><span class="icon-badge" style="background:var(--pink-bg); color:var(--pink);"><i class="ti ti-star"></i></span><p class="section-title">Dit weekend</p></div>
@@ -200,7 +197,7 @@
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <div class="card-header"><span class="icon-badge" style="background:var(--purple-bg); color:var(--purple);"><i class="ti ti-external-link"></i></span><p class="section-title">Snelkoppelingen</p><button class="add-btn" style="margin-left:auto; background:var(--surface-2); color:var(--text);" id="btnNieuweLink"><i class="ti ti-plus"></i></button></div>
+      <div class="card-header"><span class="icon-badge" style="background:var(--purple-bg); color:var(--purple);"><i class="ti ti-external-link"></i></span><p class="section-title">Snelkoppelingen</p><button class="fab" style="margin-left:auto; background:var(--purple-bg); color:var(--purple);" id="btnNieuweLink"><i class="ti ti-plus"></i>Toevoegen</button></div>
       <div id="dashLinks" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     </div>
   </section>
@@ -215,7 +212,8 @@
     </div>
 
     <div id="agendaSub-week" class="subpage">
-      <div class="card" style="margin-bottom:16px;">
+      <div id="agendaWidgetSlotAgenda"></div>
+      <div id="agendaWidgetCard" class="card" style="margin-bottom:16px;">
         <div class="card-header"><span class="icon-badge" style="background:var(--pink-bg); color:var(--pink);"><i class="ti ti-calendar-week"></i></span><p class="section-title">Deze week</p>
           <div style="margin-left:auto; position:relative;">
             <button class="fab" id="btnAgendaKiezer" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;"><i class="ti ti-adjustments"></i>Agenda's</button>
@@ -545,7 +543,7 @@ function renderTaakRij(taak, {toonDatumVeld}={}){
     : taak.frequentie + " · laatst gedaan " + formatDatumNL(taak.laatstGedaan);
   return `
     <div class="taak-item" data-taak-id="${taak.id}" style="border-left-color:${st.fg};" oncontextmenu="toonCtxMenu(event,'${taak.id}'); return false;">
-      <i class="ti ti-grip-vertical sleep-handle" style="color:${st.fg}; cursor:grab; font-size:16px;"></i>
+      <span class="sleep-handle" style="cursor:grab; padding:10px 4px 10px 0; display:flex; align-items:center;"><i class="ti ti-grip-vertical" style="color:${st.fg}; font-size:18px;"></i></span>
       <span class="cat-icon" style="background:${info.bg}; color:${info.fg};"><i class="ti ${info.icon}"></i></span>
       <div class="info">
         <div class="naam">${taak.naam}</div>
@@ -806,7 +804,7 @@ function renderAgendaWeek(){
   kolomDatumsHuidig = kolomDatums;
   const vrijdag = new Date(maandag); vrijdag.setDate(maandag.getDate()+4);
   document.getElementById("weekLabel").textContent = weekOffset === 0
-    ? `${maandag.getDate()}/${maandag.getMonth()+1} - ${vrijdag.getDate()}/${vrijdag.getMonth()+1}`
+    ? `${maandag.getDate()} ${MAANDEN_KORT[maandag.getMonth()]} - ${vrijdag.getDate()} ${MAANDEN_KORT[vrijdag.getMonth()]}`
     : "Deze week";
   document.getElementById("agendaWeek").innerHTML = kolomDatums.map((d)=>{
     const isWeekend = d.getDay()===0 || d.getDay()===6;
@@ -815,7 +813,7 @@ function renderAgendaWeek(){
     const items = agendaNotities.map((n,i)=>({...n,_i:i})).filter(n=>n.datum===iso);
     return `
     <div class="agenda-day ${isWeekend?'weekend':''} ${isVandaag?'today':''}">
-      <div class="daylabel"><span class="dagnaam">${DAGNAMEN[d.getDay()]}</span><span class="datum">${d.getDate()}/${d.getMonth()+1}</span></div>
+      <div class="daylabel"><span class="dagnaam">${DAGNAMEN[d.getDay()]}</span><span class="datum">${d.getDate()} ${MAANDEN_KORT[d.getMonth()]}</span></div>
       ${items.length ? items.map(x=>`<div class="agenda-item" title="${x.tijd?x.tijd+' - ':''}${x.tekst}" onclick="toonAgendaMenu(event,${x._i})"><span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:${x.kleur||'var(--pink)'}; margin-right:4px;"></span>${x.tekst}</div>`).join('') : '<div style="font-size:11px; color:var(--text-muted);">-</div>'}
     </div>`;
   }).join('');
@@ -1116,11 +1114,19 @@ document.addEventListener('touchmove', ()=>{ clearTimeout(langIndrukTimer); });
 
 document.getElementById("filterCategorie").addEventListener("change", renderOnderhoud);
 
+function verplaatsAgendaWidget(page){
+  const widget = document.getElementById("agendaWidgetCard");
+  if(!widget) return;
+  const doel = page === "dashboard" ? "agendaWidgetSlotHome" : (page === "agenda" ? "agendaWidgetSlotAgenda" : null);
+  if(doel) document.getElementById(doel).appendChild(widget);
+}
 function schakelPagina(page){
   document.querySelectorAll("nav .navitem").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+page).classList.add("active");
+  verplaatsAgendaWidget(page);
 }
+verplaatsAgendaWidget("dashboard");
 document.querySelectorAll("nav .navitem").forEach(btn=>{
   btn.addEventListener("click", ()=>schakelPagina(btn.dataset.page));
 });
@@ -1172,7 +1178,7 @@ document.getElementById("whoLabel").addEventListener("click", ()=>{
 
 function pasThemaToe(thema){
   document.documentElement.setAttribute("data-theme", thema);
-  document.getElementById("btnThema").innerHTML = thema==="dark" ? '<i class="ti ti-sun"></i>' : '<i class="ti ti-moon"></i>';
+  document.getElementById("btnThema").innerHTML = thema==="dark" ? '<i class="ti ti-sun"></i>Licht' : '<i class="ti ti-moon"></i>Donker';
   localStorage.setItem("huisapp-thema", thema);
 }
 document.getElementById("btnThema").addEventListener("click", ()=>{
@@ -1210,7 +1216,7 @@ document.querySelectorAll('#page-agenda .toolbar .navitem').forEach(btn=>{
     document.querySelectorAll('#page-agenda .subpage').forEach(p=>p.classList.add('hidden'));
     document.getElementById('agendaSub-'+btn.dataset.sub).classList.remove('hidden');
     if(btn.dataset.sub === 'maand') renderMaand();
-    if(btn.dataset.sub === 'vakantie'){ laadVakanties().then(()=>{ renderVakantieLijst(); renderVakantiePlanner(); }); }
+    if(btn.dataset.sub === 'vakantie'){ Promise.all([laadVakanties(), laadActiviteitSuggesties()]).then(()=>{ renderVakantieLijst(); renderVakantiePlanner(); }); }
   });
 });
 
@@ -1225,7 +1231,7 @@ function isoWeekNummer(d){
 let maandOffset = 0;
 const MAAND_NAMEN = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
 function veranderMaand(delta){ maandOffset += delta; renderMaand(); }
-function renderMaand(){
+async function renderMaand(){
   const vandaag = new Date(); vandaag.setHours(0,0,0,0);
   const basis = new Date(vandaag.getFullYear(), vandaag.getMonth()+maandOffset, 1);
   document.getElementById('maandLabel').textContent = `${MAAND_NAMEN[basis.getMonth()]} ${basis.getFullYear()}`;
@@ -1233,18 +1239,43 @@ function renderMaand(){
   const startGrid = new Date(basis); startGrid.setDate(basis.getDate() - eersteDagWeek);
   const dagenInMaand = new Date(basis.getFullYear(), basis.getMonth()+1, 0).getDate();
   const totaalCellen = Math.ceil((eersteDagWeek + dagenInMaand) / 7) * 7;
-  let html = `<div style="display:grid; grid-template-columns:32px repeat(7,1fr); gap:4px; font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+
+  let itemsPerDag = {};
+  if(googleToken && geselecteerdeAgendaIds.length){
+    const eindGrid = new Date(startGrid); eindGrid.setDate(startGrid.getDate() + totaalCellen);
+    try{
+      const resultaten = await Promise.all(geselecteerdeAgendaIds.map(async (agendaId)=>{
+        const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(agendaId)}/events?timeMin=${encodeURIComponent(startGrid.toISOString())}&timeMax=${encodeURIComponent(eindGrid.toISOString())}&singleEvents=true&orderBy=startTime`;
+        const res = await fetch(url, {headers:{Authorization:`Bearer ${googleToken}`}});
+        const data = await res.json();
+        if(data.error) return [];
+        return (data.items||[]).map(ev=>({
+          tekst: ev.summary || "(zonder titel)",
+          datum: ev.start.dateTime ? lokaleDatumString(new Date(ev.start.dateTime)) : ev.start.date
+        }));
+      }));
+      resultaten.flat().forEach(i=>{ (itemsPerDag[i.datum] = itemsPerDag[i.datum]||[]).push(i.tekst); });
+    }catch(e){ /* stil falen, maandoverzicht blijft dan leeg */ }
+  }
+
+  let html = `<div style="display:grid; grid-template-columns:28px repeat(7,1fr); gap:4px; font-size:11px; color:var(--text-muted); margin-bottom:6px;">
     <span></span><span>ma</span><span>di</span><span>wo</span><span>do</span><span>vr</span><span>za</span><span>zo</span>
   </div>`;
   for(let w=0; w<totaalCellen/7; w++){
     const weekStart = new Date(startGrid); weekStart.setDate(startGrid.getDate()+w*7);
-    html += `<div style="display:grid; grid-template-columns:32px repeat(7,1fr); gap:4px; margin-bottom:4px;">`;
-    html += `<span style="font-size:10px; color:var(--text-muted); align-self:center;">${isoWeekNummer(weekStart)}</span>`;
+    html += `<div style="display:grid; grid-template-columns:28px repeat(7,1fr); gap:4px; margin-bottom:4px;">`;
+    html += `<span style="font-size:10px; color:var(--text-muted); align-self:start; padding-top:4px;">${isoWeekNummer(weekStart)}</span>`;
     for(let d=0; d<7; d++){
       const dag = new Date(weekStart); dag.setDate(weekStart.getDate()+d);
       const inMaand = dag.getMonth()===basis.getMonth();
       const isVandaag = dag.getTime()===vandaag.getTime();
-      html += `<div style="aspect-ratio:1; border-radius:8px; background:${isVandaag?'var(--teal-bg)':'var(--surface-2)'}; display:flex; align-items:center; justify-content:center; font-size:12px; color:${inMaand?(isVandaag?'var(--teal)':'var(--text)'):'var(--text-muted)'}; font-weight:${isVandaag?'600':'400'};">${dag.getDate()}</div>`;
+      const iso = lokaleDatumString(dag);
+      const items = itemsPerDag[iso] || [];
+      html += `<div style="min-height:64px; border-radius:8px; background:${isVandaag?'var(--teal-bg)':'var(--surface-2)'}; padding:4px; opacity:${inMaand?1:.4};">
+        <div style="font-size:11px; font-weight:${isVandaag?'700':'500'}; color:${isVandaag?'var(--teal)':'var(--text)'};">${dag.getDate()}</div>
+        ${items.slice(0,3).map(t=>`<div style="font-size:9px; background:var(--surface); border-radius:4px; padding:1px 3px; margin-top:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${t}</div>`).join('')}
+        ${items.length>3 ? `<div style="font-size:9px; color:var(--text-muted);">+${items.length-3}</div>` : ''}
+      </div>`;
     }
     html += `</div>`;
   }
@@ -1254,7 +1285,13 @@ function renderMaand(){
 let vakanties = [];
 let huidigeVakantieId = null;
 let vakantieItems = [];
-const VAKANTIE_SUGGESTIES = ["Strand","Museum bezoeken","Wandelen","Fietsen","Terrasje","Uit eten","Boodschappen","Zwemmen","Niets te doen"];
+let activiteitSuggesties = [];
+
+async function laadActiviteitSuggesties(){
+  const {data, error} = await db.from('activiteit_suggesties').select('*').order('created_at');
+  if(error){ toonDebugFout(error); return; }
+  activiteitSuggesties = data;
+}
 
 async function laadVakanties(){
   const {data, error} = await db.from('vakanties').select('*').order('start_datum');
@@ -1267,9 +1304,19 @@ function renderVakantieLijst(){
     <div class="task-row" style="cursor:pointer; ${v.id===huidigeVakantieId?'border-left-color:var(--amber);':''}" onclick="selecteerVakantie('${v.id}')">
       <span class="icon" style="background:var(--amber-bg); color:var(--amber);"><i class="ti ti-suitcase"></i></span>
       <span class="label">${v.naam} — ${formatDatumNL(v.start_datum)} t/m ${formatDatumNL(v.eind_datum)}</span>
+      <button onclick="event.stopPropagation(); verwijderVakantie('${v.id}')" style="background:none; border:none; color:var(--red); padding:6px;"><i class="ti ti-trash"></i></button>
     </div>
   `).join('') : `<p style="color:var(--text-muted); font-size:13px;">Nog geen vakanties gepland.</p>`;
 }
+window.verwijderVakantie = async function(id){
+  if(!confirm("Deze vakantie en alle geplande activiteiten verwijderen?")) return;
+  const {error} = await db.from('vakanties').delete().eq('id', id);
+  if(error){ toonDebugFout(error); return; }
+  vakanties = vakanties.filter(v=>v.id!==id);
+  if(huidigeVakantieId === id) huidigeVakantieId = null;
+  renderVakantieLijst();
+  renderVakantiePlanner();
+};
 window.selecteerVakantie = function(id){
   huidigeVakantieId = id;
   renderVakantieLijst();
@@ -1280,6 +1327,7 @@ document.getElementById('btnNieuweVakantie').addEventListener('click', ()=>{
     <h3>Nieuwe vakantie</h3>
     <label>Naam</label>
     <input type="text" id="nieuweVakantieNaam" placeholder="bv. Zomervakantie Frankrijk">
+    <button style="background:var(--surface-2); padding:8px; border-radius:8px; border:none; font-size:12px; display:flex; align-items:center; gap:6px; justify-content:center;" onclick="zoekVakantieInAgenda()"><i class="ti ti-search"></i>Zoek in agenda en stel data voor</button>
     <label>Van</label>
     <input type="date" id="nieuweVakantieStart">
     <label>Tot en met</label>
@@ -1291,6 +1339,31 @@ document.getElementById('btnNieuweVakantie').addEventListener('click', ()=>{
     </div>
   `);
 });
+window.zoekVakantieInAgenda = async function(){
+  if(!googleToken){ document.getElementById('modalError').textContent = "Verbind eerst met Google Agenda (tabblad Week)."; return; }
+  const naam = document.getElementById('nieuweVakantieNaam').value.trim().toLowerCase();
+  const zoekterm = naam || "vakantie";
+  const nu = new Date();
+  const overEenJaar = new Date(); overEenJaar.setFullYear(nu.getFullYear()+1);
+  document.getElementById('modalError').textContent = "Zoeken...";
+  try{
+    const resultaten = await Promise.all(geselecteerdeAgendaIds.map(async (agendaId)=>{
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(agendaId)}/events?timeMin=${encodeURIComponent(nu.toISOString())}&timeMax=${encodeURIComponent(overEenJaar.toISOString())}&singleEvents=true&orderBy=startTime&q=${encodeURIComponent(zoekterm)}`;
+      const res = await fetch(url, {headers:{Authorization:`Bearer ${googleToken}`}});
+      const data = await res.json();
+      return data.items || [];
+    }));
+    const gevonden = resultaten.flat().sort((a,b)=> new Date(a.start.date||a.start.dateTime) - new Date(b.start.date||b.start.dateTime))[0];
+    if(!gevonden){ document.getElementById('modalError').textContent = "Niets gevonden in je agenda."; return; }
+    const startDatum = gevonden.start.date || gevonden.start.dateTime.slice(0,10);
+    let eindDatum = gevonden.end.date || gevonden.end.dateTime.slice(0,10);
+    if(gevonden.end.date){ const e = new Date(eindDatum); e.setDate(e.getDate()-1); eindDatum = lokaleDatumString(e); }
+    document.getElementById('nieuweVakantieStart').value = startDatum;
+    document.getElementById('nieuweVakantieEind').value = eindDatum;
+    if(!naam) document.getElementById('nieuweVakantieNaam').value = gevonden.summary || "";
+    document.getElementById('modalError').textContent = `Gevonden: "${gevonden.summary}"`;
+  }catch(e){ document.getElementById('modalError').textContent = "Zoeken mislukt."; }
+};
 window.opslaanNieuweVakantie = async function(){
   const naam = document.getElementById('nieuweVakantieNaam').value.trim();
   const start = document.getElementById('nieuweVakantieStart').value;
@@ -1323,23 +1396,23 @@ async function renderVakantiePlanner(){
     <div class="card" style="margin-bottom:16px;">
       <p class="section-title">Activiteiten (sleep naar een dag)</p>
       <div id="vakantieBank" style="display:flex; flex-wrap:wrap; gap:8px;">
-        ${VAKANTIE_SUGGESTIES.map(s=>`<div class="chip" data-tekst="${s}" style="background:var(--surface-2); padding:8px 12px; cursor:grab; font-size:13px;">${s}</div>`).join('')}
+        ${activiteitSuggesties.map(s=>`<div class="chip" data-tekst="${s.tekst}" data-suggestie-id="${s.id}" style="background:var(--surface-2); padding:8px 12px; cursor:grab; font-size:13px;">${s.tekst}<span onclick="verwijderSuggestie(event,'${s.id}')" style="cursor:pointer; margin-left:6px; color:var(--text-muted);"> ✕</span></div>`).join('')}
       </div>
       <div style="display:flex; gap:8px; margin-top:10px;">
-        <input type="text" id="nieuweActiviteitInput" placeholder="Eigen activiteit...">
-        <button class="add-btn" onclick="voegBankActiviteitToe()"><i class="ti ti-plus"></i></button>
+        <input type="text" id="nieuweActiviteitInput" placeholder="Eigen activiteit (blijft bewaard)...">
+        <button class="fab" style="background:var(--amber-bg); color:var(--amber);" onclick="voegBankActiviteitToe()"><i class="ti ti-plus"></i></button>
       </div>
     </div>
     <div class="card">
-      <p class="section-title">${vakantie.naam}</p>
+      <div class="card-header"><p class="section-title" style="margin:0;">${vakantie.naam}</p><button class="fab" style="margin-left:auto; background:var(--teal-bg); color:var(--teal);" onclick="zetVakantieInAgenda()"><i class="ti ti-calendar-plus"></i>Zet in Google Agenda</button></div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px;">
         ${dagen.map(d=>{
           const iso = lokaleDatumString(d);
           const dagItems = vakantieItems.filter(i=>i.datum===iso);
           return `<div>
-            <div style="font-size:12px; font-weight:500; margin-bottom:6px;">${DAGNAMEN[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}</div>
+            <div style="font-size:12px; font-weight:500; margin-bottom:6px;">${DAGNAMEN[d.getDay()]} ${d.getDate()} ${MAANDEN_KORT[d.getMonth()]}</div>
             <div class="vakantie-dropzone" data-datum="${iso}" style="min-height:90px; background:var(--surface-2); border-radius:8px; padding:6px; display:flex; flex-direction:column; gap:4px;">
-              ${dagItems.map(i=>`<div class="chip" data-id="${i.id}" style="background:var(--surface); padding:6px 8px; cursor:grab; font-size:12px;">${i.tekst}<span onclick="verwijderVakantieItem(event,'${i.id}')" style="cursor:pointer; margin-left:6px; color:var(--red);"> ✕</span></div>`).join('')}
+              ${dagItems.map(i=>`<div class="chip" data-id="${i.id}" style="background:var(--surface); padding:6px 8px; cursor:grab; font-size:12px;">${i.google_event_id?'<i class="ti ti-calendar-check" style="color:var(--teal); margin-right:3px;"></i>':''}${i.tekst}<span onclick="verwijderVakantieItem(event,'${i.id}')" style="cursor:pointer; margin-left:6px; color:var(--red);"> ✕</span></div>`).join('')}
             </div>
           </div>`;
         }).join('')}
@@ -1373,17 +1446,37 @@ window.verwijderVakantieItem = async function(e, id){
   await db.from('vakantie_items').delete().eq('id', id);
   renderVakantiePlanner();
 };
-window.voegBankActiviteitToe = function(){
+window.verwijderSuggestie = async function(e, id){
+  e.stopPropagation();
+  await db.from('activiteit_suggesties').delete().eq('id', id);
+  activiteitSuggesties = activiteitSuggesties.filter(s=>s.id!==id);
+  renderVakantiePlanner();
+};
+window.voegBankActiviteitToe = async function(){
   const input = document.getElementById('nieuweActiviteitInput');
   const tekst = input.value.trim();
   if(!tekst) return;
-  const bank = document.getElementById('vakantieBank');
-  const chip = document.createElement('div');
-  chip.className='chip'; chip.dataset.tekst=tekst;
-  chip.style.cssText='background:var(--surface-2); padding:8px 12px; cursor:grab; font-size:13px;';
-  chip.textContent=tekst;
-  bank.appendChild(chip);
-  input.value='';
+  const {data, error} = await db.from('activiteit_suggesties').insert({tekst}).select().single();
+  if(error){ toonDebugFout(error); return; }
+  activiteitSuggesties.push(data);
+  renderVakantiePlanner();
+};
+window.zetVakantieInAgenda = async function(){
+  if(!googleToken){ toonDebugFout({message:"Verbind eerst met Google Agenda (tabblad Week) voordat je dit kunt gebruiken."}); return; }
+  const nogNietGesynct = vakantieItems.filter(i=>!i.google_event_id);
+  if(nogNietGesynct.length === 0) return;
+  for(const item of nogNietGesynct){
+    try{
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(toeVoegenAgendaId)}/events`, {
+        method:"POST",
+        headers:{Authorization:`Bearer ${googleToken}`, "Content-Type":"application/json"},
+        body: JSON.stringify({summary: item.tekst, start:{date:item.datum}, end:{date:item.datum}})
+      });
+      const data = await res.json();
+      if(data.id){ await db.from('vakantie_items').update({google_event_id:data.id}).eq('id', item.id); }
+    }catch(e){ /* deze mislukte, ga door met de rest */ }
+  }
+  renderVakantiePlanner();
 };
 
 init();
