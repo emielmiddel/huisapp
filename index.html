@@ -112,10 +112,6 @@
   .agenda-day.today .daylabel .datum{color:var(--teal);}
   .agenda-item{font-size:11px; background:var(--surface); border-radius:6px; padding:5px 6px; margin-bottom:4px;}
   @media(max-width:899px){
-    .taak-item{padding:7px 10px; margin-bottom:6px; gap:8px;}
-    .taak-item .info .naam{font-size:13px;}
-    .taak-item .info .meta{font-size:11px;}
-    .taak-item .cat-icon{width:26px; height:26px; font-size:13px;}
     .agenda-week{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:88px; gap:6px; overflow-x:auto; overflow-y:visible; padding-top:4px; padding-bottom:4px; padding-left:calc(50% - 44px); padding-right:calc(50% - 44px); scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;}
     .agenda-day{min-height:78px; padding:7px 5px; scroll-snap-align:center;}
     .agenda-day .daylabel{font-size:12px;}
@@ -129,6 +125,12 @@
   .status-badge{font-size:11px; padding:4px 10px; border-radius:999px; font-weight:500; white-space:nowrap;}
 
   .taak-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-left:5px solid transparent; cursor:grab; user-select:none; -webkit-user-select:none;}
+  @media(max-width:899px){
+    .taak-item{padding:7px 10px; margin-bottom:6px; gap:8px;}
+    .taak-item .info .naam{font-size:13px;}
+    .taak-item .info .meta{font-size:11px;}
+    .taak-item .cat-icon{width:26px; height:26px; font-size:13px;}
+  }
   .taak-item .cat-icon{width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
   .taak-item .info{flex:1; min-width:0;}
   .taak-item .info .naam{font-size:14px; font-weight:500;}
@@ -644,7 +646,7 @@ function renderOnderhoud(){
   document.getElementById("onderhoudLijst").innerHTML = html;
 
   document.querySelectorAll("#onderhoudLijst .sleeplijst, #onderhoudLijst .sleeplijst-uit").forEach(el=>{
-    new Sortable(el, {animation:150, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
+    new Sortable(el, {animation:150, forceFallback:true, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
       const ids = [...el.querySelectorAll("[data-taak-id]")].map(x=>x.dataset.taakId);
       ids.forEach((id,i)=>{ const t = taken.find(t=>t.id===id); if(t) t.volgorde = i; });
       await Promise.all(ids.map((id,i)=> db.from('taken').update({volgorde:i}).eq('id', id)));
@@ -660,7 +662,7 @@ function renderKlussen(){
   document.getElementById("klussenBacklog").innerHTML = backlog.length ? backlog.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px;">Backlog is leeg.</p>`;
   document.getElementById("klussenGepland").innerHTML = gepland.length ? gepland.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px;">Nog niets ingepland.</p>`;
   [document.getElementById("klussenBacklog"), document.getElementById("klussenGepland")].forEach(el=>{
-    new Sortable(el, {animation:150, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
+    new Sortable(el, {animation:150, forceFallback:true, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
       const ids = [...el.querySelectorAll("[data-taak-id]")].map(x=>x.dataset.taakId);
       ids.forEach((id,i)=>{ const t = taken.find(t=>t.id===id); if(t) t.volgorde = i; });
       await Promise.all(ids.map((id,i)=> db.from('taken').update({volgorde:i}).eq('id', id)));
@@ -889,7 +891,7 @@ function renderBoodschappenPreview(){
     </div>
   `).join('');
   document.querySelectorAll(".sleeplijst-boodschap").forEach(el=>{
-    new Sortable(el, {group:"boodschappen", animation:150, handle:".sleep-handle", onEnd:async (evt)=>{
+    new Sortable(el, {group:"boodschappen", animation:150, forceFallback:true, handle:".sleep-handle", onEnd:async (evt)=>{
       const nieuweCat = evt.to.dataset.categorie;
       const id = evt.item.dataset.id;
       const item = boodschappen.find(b=>b.id===id);
@@ -1466,9 +1468,9 @@ async function renderVakantiePlanner(){
   `;
   vakantieSortableInstances.forEach(s=>{ try{ s.destroy(); }catch(e){} });
   vakantieSortableInstances = [];
-  vakantieSortableInstances.push(new Sortable(document.getElementById('vakantieBank'), {group:{name:'vakantie', pull:'clone', put:false}, sort:false, animation:150}));
+  vakantieSortableInstances.push(new Sortable(document.getElementById('vakantieBank'), {group:{name:'vakantie', pull:'clone', put:false}, sort:false, animation:150, forceFallback:true}));
   document.querySelectorAll('.vakantie-dropzone').forEach(zone=>{
-    vakantieSortableInstances.push(new Sortable(zone, {group:'vakantie', animation:150, filter:'.verwijder-vakantie-item', preventOnFilter:false, onAdd: async (evt)=>{
+    vakantieSortableInstances.push(new Sortable(zone, {group:'vakantie', animation:150, forceFallback:true, filter:'.verwijder-vakantie-item', preventOnFilter:false, onAdd: async (evt)=>{
       const el = evt.item;
       const datum = evt.to.dataset.datum;
       if(!el.dataset.id){
