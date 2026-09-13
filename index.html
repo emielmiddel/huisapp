@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Huis dashboard</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0F6E56">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Huis">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
 <style>
   :root{
@@ -33,7 +39,8 @@
   *{box-sizing:border-box;}
   body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); transition:background .2s, color .2s;}
   input,select,button{font-family:inherit; font-size:14px;}
-  input[type=text],input[type=number],input[type=date],select{width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface);}
+  input[type=text],input[type=number],input[type=date],select{width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text);}
+  [data-theme="dark"]{ color-scheme: dark; }
   button{cursor:pointer;}
   .hidden{display:none !important;}
 
@@ -105,12 +112,12 @@
   .agenda-day.today .daylabel .datum{color:var(--teal);}
   .agenda-item{font-size:11px; background:var(--surface); border-radius:6px; padding:5px 6px; margin-bottom:4px;}
   @media(max-width:899px){
-    .agenda-week{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:80px; gap:6px; overflow-x:auto; padding-bottom:4px; padding-left:calc(50% - 40px); padding-right:calc(50% - 40px); scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;}
-    .agenda-day{min-height:74px; padding:7px 5px; scroll-snap-align:center;}
+    .agenda-week{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:88px; gap:6px; overflow-x:auto; padding-bottom:4px; padding-left:calc(50% - 44px); padding-right:calc(50% - 44px); scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;}
+    .agenda-day{min-height:78px; padding:7px 5px; scroll-snap-align:center;}
     .agenda-day.today{transform:scale(1.05);}
-    .agenda-day .daylabel{font-size:10px;}
-    .agenda-day .daylabel .datum{font-size:10px;}
-    .agenda-item{font-size:9px; padding:3px 4px;}
+    .agenda-day .daylabel{font-size:12px;}
+    .agenda-day .daylabel .datum{font-size:11px;}
+    .agenda-item{font-size:10.5px; padding:3px 4px;}
   }
 
   .toolbar{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center;}
@@ -118,7 +125,7 @@
   .chip{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:500; display:inline-flex; align-items:center; gap:4px;}
   .status-badge{font-size:11px; padding:4px 10px; border-radius:999px; font-weight:500; white-space:nowrap;}
 
-  .taak-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-left:5px solid transparent;}
+  .taak-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-left:5px solid transparent; cursor:grab;}
   .taak-item .cat-icon{width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
   .taak-item .info{flex:1; min-width:0;}
   .taak-item .info .naam{font-size:14px; font-weight:500;}
@@ -174,7 +181,7 @@
 <div id="app" class="hidden">
   <header class="topbar">
     <h1><i class="ti ti-home-2"></i>Huis dashboard</h1>
-    <button id="btnThema" class="fab" style="background:var(--surface-2); color:var(--text-2); margin-left:auto; margin-right:12px; font-size:13px;"><i class="ti ti-moon"></i>Donker</button>
+    <button id="btnThema" class="fab" style="background:var(--surface-2); color:var(--text-2); margin-left:auto; margin-right:12px; font-size:13px;">🌙 Donker</button>
     <span class="who" id="whoLabel" style="cursor:pointer;" title="Tik om uit te loggen"></span>
   </header>
 
@@ -193,11 +200,11 @@
     <div class="card">
       <div class="card-header"><span class="icon-badge" style="background:var(--green-bg); color:var(--green);"><i class="ti ti-shopping-cart"></i></span><p class="section-title">Boodschappen (supermarkt)</p></div>
       <div id="dashBoodschappen"></div>
-      <div class="fab-wrap"><button class="fab" id="btnNieuwBoodschap" style="background:var(--green-bg); color:var(--green);" aria-label="Boodschap toevoegen"><i class="ti ti-plus"></i>Boodschap toevoegen</button></div>
+      <div class="fab-wrap"><button class="fab" id="btnNieuwBoodschap" style="background:var(--green-bg); color:var(--green);" aria-label="Boodschap toevoegen"><span style="font-weight:800; font-size:15px;">+</span>Boodschap toevoegen</button></div>
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <div class="card-header"><span class="icon-badge" style="background:var(--purple-bg); color:var(--purple);"><i class="ti ti-external-link"></i></span><p class="section-title">Snelkoppelingen</p><button class="fab" style="margin-left:auto; background:var(--purple-bg); color:var(--purple);" id="btnNieuweLink"><i class="ti ti-plus"></i>Toevoegen</button></div>
+      <div class="card-header"><span class="icon-badge" style="background:var(--purple-bg); color:var(--purple);"><i class="ti ti-external-link"></i></span><p class="section-title">Snelkoppelingen</p><button class="fab" style="margin-left:auto; background:var(--purple-bg); color:var(--purple);" id="btnNieuweLink"><span style="font-weight:800; font-size:15px;">+</span>Toevoegen</button></div>
       <div id="dashLinks" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     </div>
   </section>
@@ -206,9 +213,9 @@
     <div class="card-header" style="margin-bottom:16px;"><span class="icon-badge" style="width:38px; height:38px; font-size:19px; background:var(--pink-bg); color:var(--pink);"><i class="ti ti-calendar"></i></span><h2 style="font-size:19px; font-weight:500; margin:0;">Agenda</h2></div>
 
     <div class="toolbar" style="margin-bottom:16px;">
-      <button class="navitem active" data-sub="week" style="border-radius:10px; background:var(--teal-bg); color:var(--teal); padding:8px 16px;">Week</button>
-      <button class="navitem" data-sub="maand" style="border-radius:10px; padding:8px 16px; color:var(--text-2); background:none; border:none;">Maand</button>
-      <button class="navitem" data-sub="vakantie" style="border-radius:10px; padding:8px 16px; color:var(--text-2); background:none; border:none;">Vakantie</button>
+      <button class="navitem active" data-sub="week" style="border-radius:10px; background:var(--teal-bg); color:var(--teal); padding:8px 16px; border:2px solid var(--teal);">Week</button>
+      <button class="navitem" data-sub="maand" style="border-radius:10px; padding:8px 16px; color:var(--text-2); background:none; border:2px solid transparent;">Maand</button>
+      <button class="navitem" data-sub="vakantie" style="border-radius:10px; padding:8px 16px; color:var(--text-2); background:none; border:2px solid transparent;">Vakantie</button>
     </div>
 
     <div id="agendaSub-week" class="subpage">
@@ -229,7 +236,7 @@
         <div style="display:flex; align-items:center; justify-content:center; margin-top:10px;">
           <button class="fab" style="background:var(--surface-2); color:var(--text-2); padding:6px 12px; font-size:12px;" id="weekLabel" onclick="gaNaarDezeWeek()"></button>
         </div>
-        <div class="fab-wrap"><button class="fab" id="btnNieuweAgendaItem" style="background:var(--pink-bg); color:var(--pink);" aria-label="Agenda-item toevoegen"><i class="ti ti-plus"></i>Agenda-item toevoegen</button></div>
+        <div class="fab-wrap"><button class="fab" id="btnNieuweAgendaItem" style="background:var(--pink-bg); color:var(--pink);" aria-label="Agenda-item toevoegen"><span style="font-weight:800; font-size:15px;">+</span>Agenda-item toevoegen</button></div>
       </div>
     </div>
 
@@ -248,7 +255,7 @@
       <div class="card" style="margin-bottom:16px;">
         <div class="card-header"><span class="icon-badge" style="background:var(--amber-bg); color:var(--amber);"><i class="ti ti-suitcase"></i></span><p class="section-title">Vakanties</p></div>
         <div id="vakantieLijst"></div>
-        <div class="fab-wrap"><button class="fab" style="background:var(--amber-bg); color:var(--amber);" id="btnNieuweVakantie"><i class="ti ti-plus"></i>Nieuwe vakantie</button></div>
+        <div class="fab-wrap"><button class="fab" style="background:var(--amber-bg); color:var(--amber);" id="btnNieuweVakantie"><span style="font-weight:800; font-size:15px;">+</span>Nieuwe vakantie</button></div>
       </div>
       <div id="vakantiePlanner"></div>
     </div>
@@ -267,10 +274,10 @@
         <option value="locatie">Groepeer op locatie</option>
         <option value="naam">Alfabetisch (A-Z)</option>
       </select>
-      <button class="fab" style="background:var(--teal-bg); color:var(--teal);" id="btnNieuweTaakOnderhoudTop"><i class="ti ti-plus"></i>Toevoegen</button>
+      <button class="fab" style="background:var(--teal-bg); color:var(--teal);" id="btnNieuweTaakOnderhoudTop"><span style="font-weight:800; font-size:15px;">+</span>Toevoegen</button>
     </div>
     <div id="onderhoudLijst"></div>
-    <div class="fab-wrap"><button class="fab" id="btnNieuweTaakOnderhoud" style="background:var(--teal-bg); color:var(--teal);" aria-label="Nieuwe onderhoudstaak"><i class="ti ti-plus"></i>Nieuwe taak</button></div>
+    <div class="fab-wrap"><button class="fab" id="btnNieuweTaakOnderhoud" style="background:var(--teal-bg); color:var(--teal);" aria-label="Nieuwe onderhoudstaak"><span style="font-weight:800; font-size:15px;">+</span>Nieuwe taak</button></div>
   </section>
 
   <section id="page-klussen" class="page">
@@ -283,7 +290,7 @@
       <div class="card-header"><span class="icon-badge" style="background:var(--green-bg); color:var(--green);"><i class="ti ti-calendar-event"></i></span><p class="section-title">Ingepland</p></div>
       <div id="klussenGepland"></div>
     </div>
-    <div class="fab-wrap"><button class="fab" id="btnNieuweTaakKlus" style="background:var(--blue-bg); color:var(--blue);" aria-label="Nieuwe klus"><i class="ti ti-plus"></i>Nieuwe klus</button></div>
+    <div class="fab-wrap"><button class="fab" id="btnNieuweTaakKlus" style="background:var(--blue-bg); color:var(--blue);" aria-label="Nieuwe klus"><span style="font-weight:800; font-size:15px;">+</span>Nieuwe klus</button></div>
   </section>
 
   <section id="page-spullen" class="page">
@@ -296,12 +303,12 @@
 </div>
 
 <nav class="bottomnav hidden" id="bottomnav">
-  <button class="navitem active" data-page="dashboard"><i class="ti ti-home"></i><span>Home</span></button>
-  <button class="navitem" data-page="agenda"><i class="ti ti-calendar"></i><span>Agenda</span></button>
-  <button class="navitem" data-page="onderhoud"><i class="ti ti-tool"></i><span>Onderhoud</span></button>
-  <button class="navitem" data-page="klussen"><i class="ti ti-list-check"></i><span>Klussen</span></button>
-  <button class="navitem soon" data-page="spullen"><i class="ti ti-box"></i><span>Spullen</span></button>
-  <button class="navitem soon" data-page="boodschappen"><i class="ti ti-shopping-cart"></i><span>Bood.</span></button>
+  <button class="navitem active" data-page="dashboard"><span style="font-size:18px;">🏠</span><span>Home</span></button>
+  <button class="navitem" data-page="agenda"><span style="font-size:18px;">📅</span><span>Agenda</span></button>
+  <button class="navitem" data-page="onderhoud"><span style="font-size:18px;">🔧</span><span>Onderhoud</span></button>
+  <button class="navitem" data-page="klussen"><span style="font-size:18px;">✅</span><span>Klussen</span></button>
+  <button class="navitem soon" data-page="spullen"><span style="font-size:18px;">📦</span><span>Spullen</span></button>
+  <button class="navitem soon" data-page="boodschappen"><span style="font-size:18px;">🛒</span><span>Bood.</span></button>
 </nav>
 
 <div id="modalRoot"></div>
@@ -315,15 +322,15 @@ let huidigProfiel = "Emiel";
 let pinInvoer = "";
 
 const NAV_ITEMS = [
-  {page:"dashboard", icon:"ti-home", label:"Home", soon:false},
-  {page:"agenda", icon:"ti-calendar", label:"Agenda", soon:false},
-  {page:"onderhoud", icon:"ti-tool", label:"Onderhoud", soon:false},
-  {page:"klussen", icon:"ti-list-check", label:"Klussen", soon:false},
-  {page:"spullen", icon:"ti-box", label:"Spullen", soon:true},
-  {page:"boodschappen", icon:"ti-shopping-cart", label:"Boodschappen", soon:true}
+  {page:"dashboard", icon:"🏠", label:"Home", soon:false},
+  {page:"agenda", icon:"📅", label:"Agenda", soon:false},
+  {page:"onderhoud", icon:"🔧", label:"Onderhoud", soon:false},
+  {page:"klussen", icon:"✅", label:"Klussen", soon:false},
+  {page:"spullen", icon:"📦", label:"Spullen", soon:true},
+  {page:"boodschappen", icon:"🛒", label:"Boodschappen", soon:true}
 ];
 document.getElementById("topnav").innerHTML = NAV_ITEMS.map(n=>
-  `<button class="navitem ${n.page==='dashboard'?'active':''} ${n.soon?'soon':''}" data-page="${n.page}"><i class="ti ${n.icon}"></i>${n.label}</button>`
+  `<button class="navitem ${n.page==='dashboard'?'active':''} ${n.soon?'soon':''}" data-page="${n.page}"><span style="font-size:16px;">${n.icon}</span>${n.label}</button>`
 ).join('');
 
 const CATEGORIE_INFO = {
@@ -440,14 +447,48 @@ async function laadLinks(){
   links = data.map(r=>({id:r.id, naam:r.naam, url:r.url, icon:r.icoon}));
 }
 
-const LINK_ICONS = ["ti-thermometer","ti-sun","ti-bolt","ti-wifi","ti-camera","ti-lock","ti-external-link"];
+const LINK_ICONS = ["🏠","🌡️","☀️","⚡","📶","📷","🔒","🔗"];
 
 function renderLinks(){
-  const el = document.getElementById("dashLinks");
-  el.innerHTML = links.length ? links.map((l)=>
-    `<a class="link-chip" href="${l.url}" target="_blank" rel="noopener" oncontextmenu="verwijderLink('${l.id}'); return false;"><i class="ti ${l.icon}"></i>${l.naam}</a>`
+  document.getElementById("dashLinks").innerHTML = links.length ? links.map((l)=>
+    `<span class="link-chip" style="padding-right:4px;">
+      <a href="${l.url}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:inherit;"><span style="font-size:16px;">${l.icon}</span>${l.naam}</a>
+      <span onclick="bewerkLink('${l.id}')" style="cursor:pointer; margin-left:6px; color:var(--text-muted);">✎</span>
+      <span onclick="verwijderLink('${l.id}')" style="cursor:pointer; margin-left:4px; color:var(--red);">✕</span>
+    </span>`
   ).join('') : `<span style="font-size:13px; color:var(--text-muted);">Nog geen snelkoppelingen toegevoegd.</span>`;
 }
+window.bewerkLink = function(id){
+  const link = links.find(l=>l.id===id);
+  if(!link) return;
+  toonModal(`
+    <h3>Snelkoppeling bewerken</h3>
+    <label>Naam</label>
+    <input type="text" id="nieuweLinkNaam" value="${link.naam}">
+    <label>Link (url)</label>
+    <input type="text" id="nieuweLinkUrl" value="${link.url}">
+    <label>Icoon</label>
+    <select id="nieuweLinkIcon">${LINK_ICONS.map(i=>`<option value="${i}" ${i===link.icon?'selected':''}>${i}</option>`).join('')}</select>
+    <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
+    <div class="modal-actions">
+      <button onclick="sluitModal()">Annuleren</button>
+      <button class="primary" onclick="opslaanBewerkteLink('${id}')">Opslaan</button>
+    </div>
+  `);
+};
+window.opslaanBewerkteLink = async function(id){
+  const naam = document.getElementById("nieuweLinkNaam").value.trim();
+  const url = document.getElementById("nieuweLinkUrl").value.trim();
+  const icon = document.getElementById("nieuweLinkIcon").value;
+  if(!naam || !url){ document.getElementById("modalError").textContent = "Vul naam en link in."; return; }
+  const nieuweUrl = url.startsWith("http") ? url : "https://"+url;
+  const {error} = await db.from('links').update({naam, url:nieuweUrl, icoon:icon}).eq('id', id);
+  if(error){ document.getElementById("modalError").textContent = "Opslaan mislukt."; return; }
+  const link = links.find(l=>l.id===id);
+  link.naam = naam; link.url = nieuweUrl; link.icon = icon;
+  renderLinks();
+  sluitModal();
+};
 window.verwijderLink = async function(id){
   await db.from('links').delete().eq('id', id);
   links = links.filter(l=>l.id!==id);
@@ -461,7 +502,7 @@ document.getElementById("btnNieuweLink").addEventListener("click", ()=>{
     <label>Link (url)</label>
     <input type="text" id="nieuweLinkUrl" placeholder="https://...">
     <label>Icoon</label>
-    <select id="nieuweLinkIcon">${LINK_ICONS.map(i=>`<option value="${i}">${i.replace('ti-','')}</option>`).join('')}</select>
+    <select id="nieuweLinkIcon">${LINK_ICONS.map(i=>`<option value="${i}">${i}</option>`).join('')}</select>
     <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
     <div class="modal-actions">
       <button onclick="sluitModal()">Annuleren</button>
@@ -550,8 +591,8 @@ function renderTaakRij(taak, {toonDatumVeld}={}){
         <div class="meta">${taak.categorie} · ${sub}</div>
       </div>
       ${statusBadge(status)}
-      <button title="Zet op dit weekend" onclick="event.stopPropagation(); wisselWeekend('${taak.id}')" style="background:none; border:none; color:${taak.ditWeekend?'var(--pink)':'var(--text-muted)'}; padding:6px;"><i class="ti ${taak.ditWeekend?'ti-star-filled':'ti-star'}"></i></button>
-      <button style="background:none; border:none; color:var(--text-muted); padding:6px;" onclick="toonCtxMenu(event,'${taak.id}')"><i class="ti ti-dots-vertical"></i></button>
+      <button class="taak-actie-knop" title="Zet op dit weekend" onclick="event.stopPropagation(); wisselWeekend('${taak.id}')" style="background:none; border:none; color:${taak.ditWeekend?'var(--pink)':'var(--text-muted)'}; padding:6px; font-size:16px;">${taak.ditWeekend?'★':'☆'}</button>
+      <button class="taak-actie-knop" style="background:none; border:none; color:var(--text-muted); padding:6px;" onclick="toonCtxMenu(event,'${taak.id}')"><i class="ti ti-dots-vertical"></i></button>
     </div>
   `;
 }
@@ -600,7 +641,7 @@ function renderOnderhoud(){
   document.getElementById("onderhoudLijst").innerHTML = html;
 
   document.querySelectorAll("#onderhoudLijst .sleeplijst, #onderhoudLijst .sleeplijst-uit").forEach(el=>{
-    new Sortable(el, {animation:150, handle:".sleep-handle", onEnd:async ()=>{
+    new Sortable(el, {animation:150, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
       const ids = [...el.querySelectorAll("[data-taak-id]")].map(x=>x.dataset.taakId);
       ids.forEach((id,i)=>{ const t = taken.find(t=>t.id===id); if(t) t.volgorde = i; });
       await Promise.all(ids.map((id,i)=> db.from('taken').update({volgorde:i}).eq('id', id)));
@@ -616,7 +657,7 @@ function renderKlussen(){
   document.getElementById("klussenBacklog").innerHTML = backlog.length ? backlog.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px;">Backlog is leeg.</p>`;
   document.getElementById("klussenGepland").innerHTML = gepland.length ? gepland.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px;">Nog niets ingepland.</p>`;
   [document.getElementById("klussenBacklog"), document.getElementById("klussenGepland")].forEach(el=>{
-    new Sortable(el, {animation:150, handle:".sleep-handle", onEnd:async ()=>{
+    new Sortable(el, {animation:150, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
       const ids = [...el.querySelectorAll("[data-taak-id]")].map(x=>x.dataset.taakId);
       ids.forEach((id,i)=>{ const t = taken.find(t=>t.id===id); if(t) t.volgorde = i; });
       await Promise.all(ids.map((id,i)=> db.from('taken').update({volgorde:i}).eq('id', id)));
@@ -1178,7 +1219,7 @@ document.getElementById("whoLabel").addEventListener("click", ()=>{
 
 function pasThemaToe(thema){
   document.documentElement.setAttribute("data-theme", thema);
-  document.getElementById("btnThema").innerHTML = thema==="dark" ? '<i class="ti ti-sun"></i>Licht' : '<i class="ti ti-moon"></i>Donker';
+  document.getElementById("btnThema").innerHTML = thema==="dark" ? '☀️ Licht' : '🌙 Donker';
   localStorage.setItem("huisapp-thema", thema);
 }
 document.getElementById("btnThema").addEventListener("click", ()=>{
@@ -1210,9 +1251,9 @@ async function init(){
 document.querySelectorAll('#page-agenda .toolbar .navitem').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('#page-agenda .toolbar .navitem').forEach(b=>{
-      b.classList.remove('active'); b.style.background='none'; b.style.color='var(--text-2)';
+      b.classList.remove('active'); b.style.background='none'; b.style.color='var(--text-2)'; b.style.border='2px solid transparent'; b.blur();
     });
-    btn.classList.add('active'); btn.style.background='var(--teal-bg)'; btn.style.color='var(--teal)';
+    btn.classList.add('active'); btn.style.background='var(--teal-bg)'; btn.style.color='var(--teal)'; btn.style.border='2px solid var(--teal)';
     document.querySelectorAll('#page-agenda .subpage').forEach(p=>p.classList.add('hidden'));
     document.getElementById('agendaSub-'+btn.dataset.sub).classList.remove('hidden');
     if(btn.dataset.sub === 'maand') renderMaand();
@@ -1271,10 +1312,10 @@ async function renderMaand(){
       const isVandaag = dag.getTime()===vandaag.getTime();
       const iso = lokaleDatumString(dag);
       const items = itemsPerDag[iso] || [];
-      html += `<div style="min-height:64px; border-radius:8px; background:${isVandaag?'var(--teal-bg)':'var(--surface-2)'}; padding:4px; opacity:${inMaand?1:.4};">
+      html += `<div style="height:78px; overflow:hidden; border-radius:8px; background:${isVandaag?'var(--teal-bg)':'var(--surface-2)'}; border:1px solid var(--border); padding:4px; opacity:${inMaand?1:.4};">
         <div style="font-size:11px; font-weight:${isVandaag?'700':'500'}; color:${isVandaag?'var(--teal)':'var(--text)'};">${dag.getDate()}</div>
-        ${items.slice(0,3).map(t=>`<div style="font-size:9px; background:var(--surface); border-radius:4px; padding:1px 3px; margin-top:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${t}</div>`).join('')}
-        ${items.length>3 ? `<div style="font-size:9px; color:var(--text-muted);">+${items.length-3}</div>` : ''}
+        ${items.slice(0,2).map(t=>`<div style="font-size:9px; background:var(--surface); border-radius:4px; padding:1px 3px; margin-top:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${t}</div>`).join('')}
+        ${items.length>2 ? `<div style="font-size:9px; color:var(--text-muted); margin-top:1px;">+${items.length-2}</div>` : ''}
       </div>`;
     }
     html += `</div>`;
@@ -1400,7 +1441,7 @@ async function renderVakantiePlanner(){
       </div>
       <div style="display:flex; gap:8px; margin-top:10px;">
         <input type="text" id="nieuweActiviteitInput" placeholder="Eigen activiteit (blijft bewaard)...">
-        <button class="fab" style="background:var(--amber-bg); color:var(--amber);" onclick="voegBankActiviteitToe()"><i class="ti ti-plus"></i></button>
+        <button class="fab" style="background:var(--amber-bg); color:var(--amber);" onclick="voegBankActiviteitToe()"><span style="font-weight:800; font-size:15px;">+</span></button>
       </div>
     </div>
     <div class="card">
@@ -1412,7 +1453,7 @@ async function renderVakantiePlanner(){
           return `<div>
             <div style="font-size:12px; font-weight:500; margin-bottom:6px;">${DAGNAMEN[d.getDay()]} ${d.getDate()} ${MAANDEN_KORT[d.getMonth()]}</div>
             <div class="vakantie-dropzone" data-datum="${iso}" style="min-height:90px; background:var(--surface-2); border-radius:8px; padding:6px; display:flex; flex-direction:column; gap:4px;">
-              ${dagItems.map(i=>`<div class="chip" data-id="${i.id}" style="background:var(--surface); padding:6px 8px; cursor:grab; font-size:12px;">${i.google_event_id?'<i class="ti ti-calendar-check" style="color:var(--teal); margin-right:3px;"></i>':''}${i.tekst}<span onclick="verwijderVakantieItem(event,'${i.id}')" style="cursor:pointer; margin-left:6px; color:var(--red);"> ✕</span></div>`).join('')}
+              ${dagItems.map(i=>`<div class="chip" data-id="${i.id}" style="background:var(--surface); padding:6px 8px; cursor:grab; font-size:12px;">${i.google_event_id?'📅 ':''}${i.tekst}<span class="verwijder-vakantie-item" onclick="verwijderVakantieItem(event,'${i.id}')" style="cursor:pointer; margin-left:6px; color:var(--red);"> ✕</span></div>`).join('')}
             </div>
           </div>`;
         }).join('')}
@@ -1421,7 +1462,7 @@ async function renderVakantiePlanner(){
   `;
   new Sortable(document.getElementById('vakantieBank'), {group:{name:'vakantie', pull:'clone', put:false}, sort:false, animation:150});
   document.querySelectorAll('.vakantie-dropzone').forEach(zone=>{
-    new Sortable(zone, {group:'vakantie', animation:150, onAdd: async (evt)=>{
+    new Sortable(zone, {group:'vakantie', animation:150, filter:'.verwijder-vakantie-item', preventOnFilter:false, onAdd: async (evt)=>{
       const el = evt.item;
       const datum = evt.to.dataset.datum;
       if(!el.dataset.id){
@@ -1432,6 +1473,7 @@ async function renderVakantiePlanner(){
         el.removeAttribute('data-tekst');
         const x = document.createElement('span');
         x.textContent=' ✕';
+        x.className='verwijder-vakantie-item';
         x.style.cssText='cursor:pointer; margin-left:6px; color:var(--red);';
         x.onclick = (e)=>verwijderVakantieItem(e, nieuw.id);
         el.appendChild(x);
@@ -1479,6 +1521,9 @@ window.zetVakantieInAgenda = async function(){
   renderVakantiePlanner();
 };
 
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("/service-worker.js");
+}
 init();
 </script>
 </body>
