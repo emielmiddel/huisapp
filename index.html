@@ -99,7 +99,7 @@
 
   .warn-row{display:flex; align-items:center; gap:8px; padding:9px 11px; border-radius:9px; margin-bottom:6px; font-size:13px; font-weight:500; border-left:4px solid transparent;}
 
-  .agenda-week{display:grid; grid-template-columns:repeat(9,1fr); gap:6px; overflow-x:auto;}
+  .agenda-week{display:grid; grid-template-columns:repeat(9,1fr); gap:6px; overflow-x:auto; overflow-y:visible; padding-top:4px;}
   @media(max-width:1099px){ .agenda-week{grid-template-columns:repeat(9,90px);} }
   .agenda-day{border-radius:10px; padding:8px; min-height:100px; background:var(--surface-2); border:2px solid transparent;}
   .agenda-day.weekend{background:var(--pink-bg);}
@@ -112,9 +112,8 @@
   .agenda-day.today .daylabel .datum{color:var(--teal);}
   .agenda-item{font-size:11px; background:var(--surface); border-radius:6px; padding:5px 6px; margin-bottom:4px;}
   @media(max-width:899px){
-    .agenda-week{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:88px; gap:6px; overflow-x:auto; padding-bottom:4px; padding-left:calc(50% - 44px); padding-right:calc(50% - 44px); scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;}
+    .agenda-week{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:88px; gap:6px; overflow-x:auto; overflow-y:visible; padding-top:4px; padding-bottom:4px; padding-left:calc(50% - 44px); padding-right:calc(50% - 44px); scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;}
     .agenda-day{min-height:78px; padding:7px 5px; scroll-snap-align:center;}
-    .agenda-day.today{transform:scale(1.05);}
     .agenda-day .daylabel{font-size:12px;}
     .agenda-day .daylabel .datum{font-size:11px;}
     .agenda-item{font-size:10.5px; padding:3px 4px;}
@@ -1485,8 +1484,12 @@ async function renderVakantiePlanner(){
 }
 window.verwijderVakantieItem = async function(e, id){
   e.stopPropagation();
-  await db.from('vakantie_items').delete().eq('id', id);
-  renderVakantiePlanner();
+  e.preventDefault();
+  const {error} = await db.from('vakantie_items').delete().eq('id', id);
+  if(error){ toonDebugFout(error); return; }
+  vakantieItems = vakantieItems.filter(i=>i.id!==id);
+  const el = document.querySelector(`.vakantie-dropzone [data-id="${id}"]`);
+  if(el) el.remove();
 };
 window.verwijderSuggestie = async function(e, id){
   e.stopPropagation();
