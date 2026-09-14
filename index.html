@@ -299,7 +299,16 @@
   </section>
 
   <section id="page-spullen" class="page">
-    <div class="soon-page"><i class="ti ti-box"></i>Spullen zoeken komt in de volgende bouwstap.</div>
+    <div class="card-header" style="margin-bottom:16px;"><span class="icon-badge" style="width:38px; height:38px; font-size:19px; background:var(--purple-bg); color:var(--purple);"><i class="ti ti-box"></i></span><h2 style="font-size:19px; font-weight:500; margin:0;">Spullen</h2></div>
+    <div class="toolbar">
+      <div style="position:relative; flex:1; min-width:160px;">
+        <i class="ti ti-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:14px; color:var(--text-muted);"></i>
+        <input type="text" id="zoekSpullen" placeholder="Zoek een spullen, bv. zaklamp" style="padding-left:32px;">
+      </div>
+      <select id="filterRuimte"></select>
+    </div>
+    <div id="spullenLijst"></div>
+    <div class="fab-wrap"><button class="fab" style="background:var(--purple-bg); color:var(--purple);" id="btnNieuwSpul"><span style="font-weight:800; font-size:15px;">+</span>Toevoegen</button></div>
   </section>
 
   <section id="page-boodschappen" class="page">
@@ -312,7 +321,7 @@
   <button class="navitem" data-page="agenda"><span style="font-size:18px;">📅</span><span>Agenda</span></button>
   <button class="navitem" data-page="onderhoud"><span style="font-size:18px;">🔧</span><span>Onderhoud</span></button>
   <button class="navitem" data-page="klussen"><span style="font-size:18px;">✅</span><span>Klussen</span></button>
-  <button class="navitem soon" data-page="spullen"><span style="font-size:18px;">📦</span><span>Spullen</span></button>
+  <button class="navitem" data-page="spullen"><span style="font-size:18px;">📦</span><span>Spullen</span></button>
   <button class="navitem soon" data-page="boodschappen"><span style="font-size:18px;">🛒</span><span>Bood.</span></button>
 </nav>
 
@@ -331,7 +340,7 @@ const NAV_ITEMS = [
   {page:"agenda", icon:"📅", label:"Agenda", soon:false},
   {page:"onderhoud", icon:"🔧", label:"Onderhoud", soon:false},
   {page:"klussen", icon:"✅", label:"Klussen", soon:false},
-  {page:"spullen", icon:"📦", label:"Spullen", soon:true},
+  {page:"spullen", icon:"📦", label:"Spullen", soon:false},
   {page:"boodschappen", icon:"🛒", label:"Boodschappen", soon:true}
 ];
 document.getElementById("topnav").innerHTML = NAV_ITEMS.map(n=>
@@ -422,6 +431,169 @@ async function voegCategorieToe(naam){
   categorieen.push(naam);
   categorieIdVan[naam] = data.id;
 }
+
+let spullenCategorieen = [];
+let spullenCategorieIdVan = {};
+let ruimtes = [];
+let ruimteIdVan = {};
+let spullen = [];
+
+async function laadSpullenCategorieen(){
+  const {data, error} = await db.from('categorieen').select('*').eq('context','spullen');
+  if(error){ toonDebugFout(error); return; }
+  spullenCategorieen = data.map(c=>c.naam);
+  spullenCategorieIdVan = {};
+  data.forEach(c=>{ spullenCategorieIdVan[c.naam] = c.id; });
+}
+async function voegSpullenCategorieToe(naam){
+  const {data, error} = await db.from('categorieen').insert({naam, context:'spullen'}).select().single();
+  if(error){ toonDebugFout(error); return; }
+  spullenCategorieen.push(naam);
+  spullenCategorieIdVan[naam] = data.id;
+}
+async function laadRuimtes(){
+  const {data, error} = await db.from('ruimtes').select('*').order('naam');
+  if(error){ toonDebugFout(error); return; }
+  ruimtes = data.map(r=>r.naam);
+  ruimteIdVan = {};
+  data.forEach(r=>{ ruimteIdVan[r.naam] = r.id; });
+}
+async function voegRuimteToe(naam){
+  const {data, error} = await db.from('ruimtes').insert({naam}).select().single();
+  if(error){ toonDebugFout(error); return; }
+  ruimtes.push(naam);
+  ruimteIdVan[naam] = data.id;
+}
+async function laadSpullen(){
+  const {data, error} = await db.from('spullen').select('*, ruimtes(naam), categorieen(naam)');
+  if(error){ toonDebugFout(error); return; }
+  spullen = data.map(r=>({
+    id:r.id, naam:r.naam, sublocatie:r.sublocatie, aantal:r.aantal, status:r.status,
+    ruimte:(r.ruimtes && r.ruimtes.naam) || 'Onbekend',
+    categorie:(r.categorieen && r.categorieen.naam) || 'Overig'
+  }));
+}
+function vulSpullenSelecten(){
+  document.querySelectorAll(".modal-ruimte-select").forEach(sel=>{
+    const huidige = sel.value;
+    sel.innerHTML = ruimtes.map(r=>`<option>${r}</option>`).join('') + '<option value="__nieuw__">+ Nieuwe ruimte...</option>';
+    if(huidige) sel.value = huidige;
+  });
+  document.querySelectorAll(".modal-spullen-categorie-select").forEach(sel=>{
+    const huidige = sel.value;
+    sel.innerHTML = spullenCategorieen.map(c=>`<option>${c}</option>`).join('') + '<option value="__nieuw__">+ Nieuwe categorie...</option>';
+    if(huidige) sel.value = huidige;
+  });
+  const filterSel = document.getElementById("filterRuimte");
+  if(filterSel){
+    const huidige = filterSel.value;
+    filterSel.innerHTML = '<option value="">Ruimte</option>' + ruimtes.map(r=>`<option>${r}</option>`).join('');
+    if(huidige) filterSel.value = huidige;
+  }
+}
+const RUIMTE_INFO = {
+  "Zolder":{bg:"var(--amber-bg)", fg:"var(--amber)", icon:"ti-triangle"},
+  "Garage":{bg:"var(--blue-bg)", fg:"var(--blue)", icon:"ti-car"},
+  "Logeerkamer":{bg:"var(--pink-bg)", fg:"var(--pink)", icon:"ti-bed"},
+  "Onbekend":{bg:"var(--surface-2)", fg:"var(--text-2)", icon:"ti-help"}
+};
+function ruimteInfo(naam){ return RUIMTE_INFO[naam] || {bg:"var(--purple-bg)", fg:"var(--purple)", icon:"ti-door"}; }
+function renderSpullen(){
+  const zoekterm = (document.getElementById("zoekSpullen").value || "").toLowerCase().trim();
+  const filterR = document.getElementById("filterRuimte").value;
+  let lijst = spullen.filter(s=>!filterR || s.ruimte===filterR);
+  if(zoekterm) lijst = lijst.filter(s=> s.naam.toLowerCase().includes(zoekterm) || (s.sublocatie||"").toLowerCase().includes(zoekterm));
+  document.getElementById("spullenLijst").innerHTML = lijst.length ? lijst.map(s=>{
+    const ri = ruimteInfo(s.ruimte);
+    const isWeg = s.status === "weg";
+    return `<div class="taak-item" style="${isWeg?'opacity:.5;':''}">
+      <span class="cat-icon" style="background:${ri.bg}; color:${ri.fg};"><i class="ti ${ri.icon}"></i></span>
+      <div class="info">
+        <div class="naam">${s.naam}${s.aantal?` <span style="color:var(--text-muted); font-weight:400;">×${s.aantal}</span>`:''}</div>
+        <div class="meta">${s.ruimte}${s.sublocatie?' · '+s.sublocatie:''} · ${s.categorie}</div>
+      </div>
+      <button onclick="wisselSpulStatus('${s.id}')" style="background:none; border:none; color:${isWeg?'var(--text-muted)':'var(--green)'}; padding:6px; font-size:15px;">${isWeg?'⟲':'✓'}</button>
+      <button onclick="verwijderSpul('${s.id}')" style="background:none; border:none; color:var(--red); padding:6px;">✕</button>
+    </div>`;
+  }).join('') : `<p style="color:var(--text-muted); font-size:13px;">Niets gevonden.</p>`;
+}
+window.wisselSpulStatus = async function(id){
+  const spul = spullen.find(s=>s.id===id);
+  if(!spul) return;
+  const nieuweStatus = spul.status === "weg" ? "aanwezig" : "weg";
+  const {error} = await db.from('spullen').update({status:nieuweStatus}).eq('id', id);
+  if(error){ toonDebugFout(error); return; }
+  spul.status = nieuweStatus;
+  renderSpullen();
+};
+window.verwijderSpul = async function(id){
+  const {error} = await db.from('spullen').delete().eq('id', id);
+  if(error){ toonDebugFout(error); return; }
+  spullen = spullen.filter(s=>s.id!==id);
+  renderSpullen();
+};
+document.getElementById("zoekSpullen").addEventListener("input", renderSpullen);
+document.getElementById("filterRuimte").addEventListener("change", renderSpullen);
+document.getElementById("btnNieuwSpul").addEventListener("click", ()=>{
+  toonModal(`
+    <h3>Nieuw item</h3>
+    <label>Naam</label>
+    <input type="text" id="nieuwSpulNaam" placeholder="bv. Zaklamp">
+    <label>Ruimte</label>
+    <select id="nieuwSpulRuimte" class="modal-ruimte-select"></select>
+    <input type="text" id="nieuweRuimteNaam" class="hidden" placeholder="Naam nieuwe ruimte">
+    <label>Sublocatie (optioneel)</label>
+    <input type="text" id="nieuwSpulSublocatie" placeholder="bv. linker lade onder het bed">
+    <label>Categorie</label>
+    <select id="nieuwSpulCategorie" class="modal-spullen-categorie-select"></select>
+    <input type="text" id="nieuweSpullenCatNaam" class="hidden" placeholder="Naam nieuwe categorie">
+    <label>Aantal (optioneel)</label>
+    <input type="number" id="nieuwSpulAantal" min="1">
+    <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
+    <div class="modal-actions">
+      <button onclick="sluitModal()">Annuleren</button>
+      <button class="primary" onclick="opslaanNieuwSpul()">Toevoegen</button>
+    </div>
+  `);
+  vulSpullenSelecten();
+  document.getElementById("nieuwSpulRuimte").addEventListener("change", (e)=>{
+    document.getElementById("nieuweRuimteNaam").classList.toggle("hidden", e.target.value !== "__nieuw__");
+  });
+  document.getElementById("nieuwSpulCategorie").addEventListener("change", (e)=>{
+    document.getElementById("nieuweSpullenCatNaam").classList.toggle("hidden", e.target.value !== "__nieuw__");
+  });
+});
+window.opslaanNieuwSpul = async function(){
+  const naam = document.getElementById("nieuwSpulNaam").value.trim();
+  let ruimte = document.getElementById("nieuwSpulRuimte").value;
+  const nieuweRuimteNaam = document.getElementById("nieuweRuimteNaam").value.trim();
+  const sublocatie = document.getElementById("nieuwSpulSublocatie").value.trim();
+  let categorie = document.getElementById("nieuwSpulCategorie").value;
+  const nieuweCatNaam = document.getElementById("nieuweSpullenCatNaam").value.trim();
+  const aantal = document.getElementById("nieuwSpulAantal").value;
+
+  if(!naam){ document.getElementById("modalError").textContent = "Vul een naam in."; return; }
+  if(ruimte === "__nieuw__"){
+    if(!nieuweRuimteNaam){ document.getElementById("modalError").textContent = "Vul een naam voor de nieuwe ruimte in."; return; }
+    ruimte = nieuweRuimteNaam;
+    if(!ruimtes.includes(ruimte)) await voegRuimteToe(ruimte);
+  }
+  if(categorie === "__nieuw__"){
+    if(!nieuweCatNaam){ document.getElementById("modalError").textContent = "Vul een naam voor de nieuwe categorie in."; return; }
+    categorie = nieuweCatNaam;
+    if(!spullenCategorieen.includes(categorie)) await voegSpullenCategorieToe(categorie);
+  }
+
+  const {data, error} = await db.from('spullen').insert({
+    naam, ruimte_id: ruimteIdVan[ruimte]||null, sublocatie: sublocatie||null,
+    categorie_id: spullenCategorieIdVan[categorie]||null, aantal: aantal||null
+  }).select().single();
+  if(error){ document.getElementById("modalError").textContent = "Opslaan mislukt, probeer opnieuw."; return; }
+  spullen.push({id:data.id, naam, ruimte, sublocatie: sublocatie||null, categorie, aantal: aantal||null, status:"aanwezig"});
+  vulSpullenSelecten();
+  renderSpullen();
+  sluitModal();
+};
 
 async function laadTaken(){
   const {data, error} = await db.from('taken').select('*, categorieen(naam)').order('volgorde');
@@ -1173,6 +1345,12 @@ function schakelPagina(page){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+page).classList.add("active");
   verplaatsAgendaWidget(page);
+  if(page === "spullen" && spullen.length === 0){
+    Promise.all([laadRuimtes(), laadSpullenCategorieen(), laadSpullen()]).then(()=>{
+      vulSpullenSelecten();
+      renderSpullen();
+    });
+  }
 }
 verplaatsAgendaWidget("dashboard");
 document.querySelectorAll("nav .navitem").forEach(btn=>{
