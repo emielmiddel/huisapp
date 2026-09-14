@@ -303,7 +303,8 @@
     <div class="toolbar">
       <div style="position:relative; flex:1; min-width:160px;">
         <i class="ti ti-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:14px; color:var(--text-muted);"></i>
-        <input type="text" id="zoekSpullen" placeholder="Zoek een spullen, bv. zaklamp" style="padding-left:32px;">
+        <input type="text" id="zoekSpullen" placeholder="Zoek een spullen, bv. zaklamp" style="padding-left:32px; padding-right:32px;">
+        <span id="wisZoekSpullen" onclick="document.getElementById('zoekSpullen').value=''; renderSpullen();" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:15px; color:var(--text-muted); cursor:pointer;">✕</span>
       </div>
       <select id="filterRuimte"></select>
     </div>
@@ -512,8 +513,11 @@ function renderSpullen(){
         <div class="naam">${s.naam}${s.aantal?` <span style="color:var(--text-muted); font-weight:400;">×${s.aantal}</span>`:''}</div>
         <div class="meta">${s.ruimte}${s.sublocatie?' · '+s.sublocatie:''} · ${s.categorie}</div>
       </div>
-      <button onclick="wisselSpulStatus('${s.id}')" style="background:none; border:none; color:${isWeg?'var(--text-muted)':'var(--green)'}; padding:6px; font-size:15px;">${isWeg?'⟲':'✓'}</button>
-      <button onclick="verwijderSpul('${s.id}')" style="background:none; border:none; color:var(--red); padding:6px;">✕</button>
+      <label title="Aanwezig?" style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-muted);">
+        <input type="checkbox" ${isWeg?'':'checked'} onchange="wisselSpulStatus('${s.id}')" style="width:auto; margin:0;">aanwezig
+      </label>
+      <button title="Bewerken" onclick="bewerkSpul('${s.id}')" style="background:none; border:none; color:var(--text-muted); padding:6px;">✎</button>
+      <button title="Verwijderen" onclick="verwijderSpul('${s.id}')" style="background:none; border:none; color:var(--red); padding:6px;">✕</button>
     </div>`;
   }).join('') : `<p style="color:var(--text-muted); font-size:13px;">Niets gevonden.</p>`;
 }
@@ -534,36 +538,39 @@ window.verwijderSpul = async function(id){
 };
 document.getElementById("zoekSpullen").addEventListener("input", renderSpullen);
 document.getElementById("filterRuimte").addEventListener("change", renderSpullen);
-document.getElementById("btnNieuwSpul").addEventListener("click", ()=>{
+document.getElementById("btnNieuwSpul").addEventListener("click", ()=> openSpulModal());
+window.bewerkSpul = function(id){ openSpulModal(spullen.find(s=>s.id===id)); };
+function openSpulModal(spul){
   toonModal(`
-    <h3>Nieuw item</h3>
+    <h3>${spul?'Item bewerken':'Nieuw item'}</h3>
     <label>Naam</label>
-    <input type="text" id="nieuwSpulNaam" placeholder="bv. Zaklamp">
+    <input type="text" id="nieuwSpulNaam" placeholder="bv. Zaklamp" value="${spul?spul.naam:''}">
     <label>Ruimte</label>
     <select id="nieuwSpulRuimte" class="modal-ruimte-select"></select>
     <input type="text" id="nieuweRuimteNaam" class="hidden" placeholder="Naam nieuwe ruimte">
     <label>Sublocatie (optioneel)</label>
-    <input type="text" id="nieuwSpulSublocatie" placeholder="bv. linker lade onder het bed">
+    <input type="text" id="nieuwSpulSublocatie" placeholder="bv. linker lade onder het bed" value="${spul&&spul.sublocatie?spul.sublocatie:''}">
     <label>Categorie</label>
     <select id="nieuwSpulCategorie" class="modal-spullen-categorie-select"></select>
     <input type="text" id="nieuweSpullenCatNaam" class="hidden" placeholder="Naam nieuwe categorie">
     <label>Aantal (optioneel)</label>
-    <input type="number" id="nieuwSpulAantal" min="1">
+    <input type="number" id="nieuwSpulAantal" min="1" value="${spul&&spul.aantal?spul.aantal:''}">
     <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
     <div class="modal-actions">
       <button onclick="sluitModal()">Annuleren</button>
-      <button class="primary" onclick="opslaanNieuwSpul()">Toevoegen</button>
+      <button class="primary" onclick="opslaanNieuwSpul(${spul?`'${spul.id}'`:'null'})">${spul?'Opslaan':'Toevoegen'}</button>
     </div>
   `);
   vulSpullenSelecten();
+  if(spul){ document.getElementById("nieuwSpulRuimte").value = spul.ruimte; document.getElementById("nieuwSpulCategorie").value = spul.categorie; }
   document.getElementById("nieuwSpulRuimte").addEventListener("change", (e)=>{
     document.getElementById("nieuweRuimteNaam").classList.toggle("hidden", e.target.value !== "__nieuw__");
   });
   document.getElementById("nieuwSpulCategorie").addEventListener("change", (e)=>{
     document.getElementById("nieuweSpullenCatNaam").classList.toggle("hidden", e.target.value !== "__nieuw__");
   });
-});
-window.opslaanNieuwSpul = async function(){
+}
+window.opslaanNieuwSpul = async function(bestaandId){
   const naam = document.getElementById("nieuwSpulNaam").value.trim();
   let ruimte = document.getElementById("nieuwSpulRuimte").value;
   const nieuweRuimteNaam = document.getElementById("nieuweRuimteNaam").value.trim();
@@ -584,12 +591,21 @@ window.opslaanNieuwSpul = async function(){
     if(!spullenCategorieen.includes(categorie)) await voegSpullenCategorieToe(categorie);
   }
 
-  const {data, error} = await db.from('spullen').insert({
+  const velden = {
     naam, ruimte_id: ruimteIdVan[ruimte]||null, sublocatie: sublocatie||null,
     categorie_id: spullenCategorieIdVan[categorie]||null, aantal: aantal||null
-  }).select().single();
-  if(error){ document.getElementById("modalError").textContent = "Opslaan mislukt, probeer opnieuw."; return; }
-  spullen.push({id:data.id, naam, ruimte, sublocatie: sublocatie||null, categorie, aantal: aantal||null, status:"aanwezig"});
+  };
+
+  if(bestaandId){
+    const {error} = await db.from('spullen').update(velden).eq('id', bestaandId);
+    if(error){ document.getElementById("modalError").textContent = "Opslaan mislukt, probeer opnieuw."; return; }
+    const spul = spullen.find(s=>s.id===bestaandId);
+    Object.assign(spul, {naam, ruimte, sublocatie: sublocatie||null, categorie, aantal: aantal||null});
+  } else {
+    const {data, error} = await db.from('spullen').insert(velden).select().single();
+    if(error){ document.getElementById("modalError").textContent = "Opslaan mislukt, probeer opnieuw."; return; }
+    spullen.push({id:data.id, naam, ruimte, sublocatie: sublocatie||null, categorie, aantal: aantal||null, status:"aanwezig"});
+  }
   vulSpullenSelecten();
   renderSpullen();
   sluitModal();
