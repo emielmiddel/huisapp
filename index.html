@@ -867,8 +867,10 @@ function renderAgendaWeek(){
   const agendaContainer = document.getElementById("agendaWeek");
   if(vandaagEl && weekOffset === 0){
     requestAnimationFrame(()=> requestAnimationFrame(()=>{
-      const doel = vandaagEl.offsetLeft - (agendaContainer.clientWidth/2) + (vandaagEl.clientWidth/2);
-      agendaContainer.scrollLeft = doel;
+      const containerRect = agendaContainer.getBoundingClientRect();
+      const childRect = vandaagEl.getBoundingClientRect();
+      const verschil = (childRect.left + childRect.width/2) - (containerRect.left + containerRect.width/2);
+      agendaContainer.scrollLeft += verschil;
     }));
   } else {
     agendaContainer.scrollLeft = 0;
