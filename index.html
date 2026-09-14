@@ -124,7 +124,7 @@
   .chip{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:500; display:inline-flex; align-items:center; gap:4px; user-select:none; -webkit-user-select:none;}
   .status-badge{font-size:11px; padding:4px 10px; border-radius:999px; font-weight:500; white-space:nowrap;}
 
-  .taak-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-left:5px solid transparent; cursor:grab; user-select:none; -webkit-user-select:none;}
+  .taak-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-left:5px solid transparent;}
   @media(max-width:899px){
     .taak-item{padding:7px 10px; margin-bottom:6px; gap:8px;}
     .taak-item .info .naam{font-size:13px;}
@@ -589,7 +589,7 @@ function renderTaakRij(taak, {toonDatumVeld}={}){
     : taak.frequentie + " · laatst gedaan " + formatDatumNL(taak.laatstGedaan);
   return `
     <div class="taak-item" data-taak-id="${taak.id}" style="border-left-color:${st.fg};" oncontextmenu="toonCtxMenu(event,'${taak.id}'); return false;">
-      <span class="sleep-handle" style="cursor:grab; padding:10px 4px 10px 0; display:flex; align-items:center;"><i class="ti ti-grip-vertical" style="color:${st.fg}; font-size:18px;"></i></span>
+      <span class="sleep-handle" style="cursor:grab; padding:10px 8px 10px 0; display:flex; align-items:center; font-size:16px; font-weight:700; color:${st.fg}; letter-spacing:-2px; line-height:1;">⋮⋮</span>
       <span class="cat-icon" style="background:${info.bg}; color:${info.fg};"><i class="ti ${info.icon}"></i></span>
       <div class="info">
         <div class="naam">${taak.naam}</div>
@@ -646,7 +646,7 @@ function renderOnderhoud(){
   document.getElementById("onderhoudLijst").innerHTML = html;
 
   document.querySelectorAll("#onderhoudLijst .sleeplijst, #onderhoudLijst .sleeplijst-uit").forEach(el=>{
-    new Sortable(el, {animation:150, forceFallback:true, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
+    new Sortable(el, {animation:150, forceFallback:true, handle:".sleep-handle", onEnd:async ()=>{
       const ids = [...el.querySelectorAll("[data-taak-id]")].map(x=>x.dataset.taakId);
       ids.forEach((id,i)=>{ const t = taken.find(t=>t.id===id); if(t) t.volgorde = i; });
       await Promise.all(ids.map((id,i)=> db.from('taken').update({volgorde:i}).eq('id', id)));
@@ -662,7 +662,7 @@ function renderKlussen(){
   document.getElementById("klussenBacklog").innerHTML = backlog.length ? backlog.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px;">Backlog is leeg.</p>`;
   document.getElementById("klussenGepland").innerHTML = gepland.length ? gepland.map(t=>renderTaakRij(t)).join('') : `<p style="color:var(--text-muted); font-size:13px;">Nog niets ingepland.</p>`;
   [document.getElementById("klussenBacklog"), document.getElementById("klussenGepland")].forEach(el=>{
-    new Sortable(el, {animation:150, forceFallback:true, filter:".taak-actie-knop", preventOnFilter:false, onEnd:async ()=>{
+    new Sortable(el, {animation:150, forceFallback:true, handle:".sleep-handle", onEnd:async ()=>{
       const ids = [...el.querySelectorAll("[data-taak-id]")].map(x=>x.dataset.taakId);
       ids.forEach((id,i)=>{ const t = taken.find(t=>t.id===id); if(t) t.volgorde = i; });
       await Promise.all(ids.map((id,i)=> db.from('taken').update({volgorde:i}).eq('id', id)));
@@ -866,10 +866,10 @@ function renderAgendaWeek(){
   const vandaagEl = document.querySelector("#agendaWeek .agenda-day.today");
   const agendaContainer = document.getElementById("agendaWeek");
   if(vandaagEl && weekOffset === 0){
-    setTimeout(()=>{
+    requestAnimationFrame(()=> requestAnimationFrame(()=>{
       const doel = vandaagEl.offsetLeft - (agendaContainer.clientWidth/2) + (vandaagEl.clientWidth/2);
       agendaContainer.scrollLeft = doel;
-    }, 30);
+    }));
   } else {
     agendaContainer.scrollLeft = 0;
   }
@@ -1457,7 +1457,7 @@ async function renderVakantiePlanner(){
           const iso = lokaleDatumString(d);
           const dagItems = vakantieItems.filter(i=>i.datum===iso);
           return `<div>
-            <div style="font-size:12px; font-weight:500; margin-bottom:6px;">${DAGNAMEN[d.getDay()]} ${d.getDate()} ${MAANDEN_KORT[d.getMonth()]}</div>
+            <div style="font-size:12px; font-weight:500; margin-bottom:6px;">${DAGNAMEN[d.getDay()]} ${d.getDate()} ${MAANDEN_KORT[d.getMonth()]} <span style="color:var(--text-muted); font-weight:400;">· wk${isoWeekNummer(d)}</span></div>
             <div class="vakantie-dropzone" data-datum="${iso}" style="min-height:90px; background:var(--surface-2); border-radius:8px; padding:6px; display:flex; flex-direction:column; gap:4px;">
               ${dagItems.map(i=>`<div class="chip" data-id="${i.id}" style="background:var(--surface); padding:6px 8px; cursor:grab; font-size:12px;">${i.google_event_id?'📅 ':''}${i.tekst}<span class="verwijder-vakantie-item" onclick="verwijderVakantieItem(event,'${i.id}')" style="cursor:pointer; margin-left:6px; color:var(--red);"> ✕</span></div>`).join('')}
             </div>
