@@ -325,7 +325,10 @@
   </section>
 
   <section id="page-boodschappen" class="page">
-    <div class="soon-page"><i class="ti ti-shopping-cart"></i>Volledige boodschappen- en voorraadmodule komt in de volgende bouwstap.</div>
+    <div class="card-header" style="margin-bottom:16px;"><span class="icon-badge" style="width:38px; height:38px; font-size:19px; background:var(--green-bg); color:var(--green);"><i class="ti ti-shopping-cart"></i></span><h2 style="font-size:19px; font-weight:500; margin:0;">Boodschappen</h2></div>
+    <div id="winkelStrip" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin-bottom:8px;"></div>
+    <div id="boodschappenTabLijst"></div>
+    <div class="fab-wrap"><button class="fab" style="background:var(--green-bg); color:var(--green);" id="btnNieuwBoodschapTab"><span style="font-weight:800; font-size:15px;">+</span>Toevoegen</button></div>
   </section>
 
   <section id="page-lijstjes" class="page">
@@ -342,7 +345,7 @@
   <button class="navitem" data-page="onderhoud"><span style="font-size:18px;">🔧</span><span>Onderhoud</span></button>
   <button class="navitem" data-page="klussen"><span style="font-size:18px;">✅</span><span>Klussen</span></button>
   <button class="navitem" data-page="spullen"><span style="font-size:18px;">📦</span><span>Spullen</span></button>
-  <button class="navitem soon" data-page="boodschappen"><span style="font-size:18px;">🛒</span><span>Bood.</span></button>
+  <button class="navitem" data-page="boodschappen"><span style="font-size:18px;">🛒</span><span>Bood.</span></button>
   <button class="navitem" data-page="lijstjes"><span style="font-size:18px;">📋</span><span>Lijstjes</span></button>
 </nav>
 
@@ -362,7 +365,7 @@ const NAV_ITEMS = [
   {page:"onderhoud", icon:"🔧", label:"Onderhoud", soon:false},
   {page:"klussen", icon:"✅", label:"Klussen", soon:false},
   {page:"spullen", icon:"📦", label:"Spullen", soon:false},
-  {page:"boodschappen", icon:"🛒", label:"Boodschappen", soon:true},
+  {page:"boodschappen", icon:"🛒", label:"Boodschappen", soon:false},
   {page:"lijstjes", icon:"📋", label:"Lijstjes", soon:false}
 ];
 document.getElementById("topnav").innerHTML = NAV_ITEMS.map(n=>
@@ -1175,7 +1178,36 @@ window.verwijderBoodschap = async function(id){
   await db.from('boodschappen').delete().eq('id', id);
   boodschappen = boodschappen.filter(b=>b.id!==id);
   renderBoodschappenPreview();
+  renderBoodschappenTab();
 };
+
+let huidigeWinkel = "supermarkt";
+function renderWinkelStrip(){
+  const alleWinkels = [...new Set([...WINKELS, ...boodschappen.map(b=>b.winkel)])].sort((a,b)=>a.localeCompare(b));
+  document.getElementById("winkelStrip").innerHTML = alleWinkels.map(w=>{
+    const actief = w === huidigeWinkel;
+    return `<button onclick="kiesWinkel('${w}')" style="flex-shrink:0; border-radius:999px; padding:8px 16px; border:2px solid ${actief?'var(--green)':'transparent'}; background:${actief?'var(--green-bg)':'var(--surface-2)'}; color:${actief?'var(--green)':'var(--text)'}; font-size:13px; font-weight:500; text-transform:capitalize;">${w}</button>`;
+  }).join('');
+}
+window.kiesWinkel = function(w){ huidigeWinkel = w; renderWinkelStrip(); renderBoodschappenTab(); };
+function renderBoodschappenTab(){
+  const items = boodschappen.filter(b=>b.winkel === huidigeWinkel);
+  const el = document.getElementById("boodschappenTabLijst");
+  if(items.length === 0){ el.innerHTML = `<p style="color:var(--text-muted); font-size:13px;">Lijstje voor ${huidigeWinkel} is leeg.</p>`; return; }
+  if(huidigeWinkel === "supermarkt"){
+    const groepen = {};
+    items.forEach(i=>{ (groepen[i.categorie] = groepen[i.categorie]||[]).push(i); });
+    el.innerHTML = [...BOODSCHAP_CATEGORIEEN].sort((a,b)=>a.localeCompare(b)).filter(c=>groepen[c]).map(cat=>`
+      <div class="card" style="margin-bottom:12px;">
+        <p class="section-title">${cat}</p>
+        ${groepen[cat].map(i=>`<div class="boodschap-item"><input type="checkbox" onchange="verwijderBoodschap('${i.id}')">${i.naam}</div>`).join('')}
+      </div>
+    `).join('');
+  } else {
+    el.innerHTML = `<div class="card">${items.map(i=>`<div class="boodschap-item"><input type="checkbox" onchange="verwijderBoodschap('${i.id}')">${i.naam}</div>`).join('')}</div>`;
+  }
+}
+document.getElementById("btnNieuwBoodschapTab").addEventListener("click", ()=> document.getElementById("btnNieuwBoodschap").click());
 document.getElementById("btnNieuwBoodschap").addEventListener("click", ()=>{
   toonModal(`
     <h3>Nieuwe boodschap</h3>
@@ -1227,6 +1259,8 @@ window.opslaanNieuweBoodschap = async function(){
   if(error){ document.getElementById("modalError").textContent = "Opslaan mislukt, probeer opnieuw."; return; }
   boodschappen.push({id:data.id, naam, categorie, winkel});
   renderBoodschappenPreview();
+  renderWinkelStrip();
+  renderBoodschappenTab();
   sluitModal();
 };
 
@@ -1543,6 +1577,8 @@ async function init(){
   await laadVakanties();
   agendaNotities = await opslaanGet("huis-agenda-notities", []);
   renderBoodschappenPreview();
+  renderWinkelStrip();
+  renderBoodschappenTab();
   renderVakantieDashboardKaart();
   renderOnderhoud(); renderKlussen(); renderDashboard();
   renderAgendaWeek();
@@ -1944,6 +1980,7 @@ function renderLijstjeInhoud(){
         <input type="text" id="nieuwLijstjeItemInput" placeholder="Nieuw item..." onkeydown="if(event.key==='Enter') voegLijstjeItemToe()">
         <button class="fab" style="background:var(--blue-bg); color:var(--blue);" onclick="voegLijstjeItemToe()"><span style="font-weight:800; font-size:15px;">+</span></button>
       </div>
+      <div class="fab-wrap"><button class="fab" style="background:var(--surface-2); color:var(--text-2); font-size:12px;" onclick="openBulkToevoegen()">Meerdere items plakken</button></div>
     </div>
   `;
   renderLijstjeItemsLijst();
@@ -1983,6 +2020,30 @@ window.voegLijstjeItemToe = async function(){
   renderLijstjeItemsLijst();
   renderLijstjesStrip();
 };
+window.openBulkToevoegen = function(){
+  toonModal(`
+    <h3>Meerdere items toevoegen</h3>
+    <label>Items plakken (één per regel)</label>
+    <textarea id="bulkItemsInput" rows="8" style="width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:14px;"></textarea>
+    <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
+    <div class="modal-actions">
+      <button onclick="sluitModal()">Annuleren</button>
+      <button class="primary" onclick="opslaanBulkItems()">Toevoegen</button>
+    </div>
+  `);
+};
+window.opslaanBulkItems = async function(){
+  const regels = document.getElementById('bulkItemsInput').value.split('\n').map(r=>r.trim()).filter(r=>r);
+  if(!regels.length){ sluitModal(); return; }
+  const start = lijstjeItems.length;
+  const rijen = regels.map((tekst, i)=>({lijstje_id: huidigLijstjeId, tekst, volgorde: start+i}));
+  const {data, error} = await db.from('lijstje_items').insert(rijen).select();
+  if(error){ document.getElementById('modalError').textContent = 'Opslaan mislukt.'; return; }
+  lijstjeItems.push(...data);
+  renderLijstjeItemsLijst();
+  renderLijstjesStrip();
+  sluitModal();
+};
 window.verwijderLijstje = async function(id){
   if(!confirm('Deze hele lijst verwijderen?')) return;
   await db.from('lijstjes').delete().eq('id', id);
@@ -1998,6 +2059,8 @@ document.getElementById('btnNieuwLijstje').addEventListener('click', ()=>{
     <h3>Nieuwe lijst</h3>
     <label>Naam</label>
     <input type="text" id="nieuweLijstjeNaam" placeholder="bv. Kampeerspullen">
+    <label>Items plakken (optioneel, één per regel)</label>
+    <textarea id="nieuweLijstjeItems" rows="6" placeholder="Slaapzak&#10;Tent&#10;Kooktoestel&#10;..." style="width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:14px;"></textarea>
     <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
     <div class="modal-actions">
       <button onclick="sluitModal()">Annuleren</button>
@@ -2012,7 +2075,15 @@ window.opslaanNieuwLijstje = async function(){
   if(error){ document.getElementById('modalError').textContent = 'Opslaan mislukt.'; return; }
   lijstjes.push(data);
   huidigLijstjeId = data.id;
-  lijstjeItems = [];
+
+  const geplakteRegels = document.getElementById('nieuweLijstjeItems').value.split('\n').map(r=>r.trim()).filter(r=>r);
+  if(geplakteRegels.length){
+    const rijen = geplakteRegels.map((tekst, i)=>({lijstje_id: data.id, tekst, volgorde: i}));
+    const {data: ingevoegd, error: fout} = await db.from('lijstje_items').insert(rijen).select();
+    lijstjeItems = fout ? [] : ingevoegd;
+  } else {
+    lijstjeItems = [];
+  }
   renderLijstjesStrip();
   renderLijstjeInhoud();
   sluitModal();
