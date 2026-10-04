@@ -64,7 +64,8 @@
   header.topbar h1 i{color:var(--teal); font-size:22px;}
   header.topbar .who{font-size:13px; color:var(--text-2);}
 
-  nav.bottomnav{position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:6px 4px calc(6px + env(safe-area-inset-bottom)); z-index:10;}
+  nav.bottomnav{position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:6px 4px calc(6px + env(safe-area-inset-bottom)); z-index:10; overflow-x:auto;}
+  nav.bottomnav .navitem{flex-shrink:0; min-width:58px;}
   nav.bottomnav .navitem{display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--text-muted); background:none; border:none; padding:6px 4px; flex:1; max-width:100px; border-radius:8px;}
   nav.bottomnav .navitem i{font-size:20px;}
   nav.bottomnav .navitem span{font-size:10px;}
@@ -326,6 +327,13 @@
   <section id="page-boodschappen" class="page">
     <div class="soon-page"><i class="ti ti-shopping-cart"></i>Volledige boodschappen- en voorraadmodule komt in de volgende bouwstap.</div>
   </section>
+
+  <section id="page-lijstjes" class="page">
+    <div class="card-header" style="margin-bottom:16px;"><span class="icon-badge" style="width:38px; height:38px; font-size:19px; background:var(--blue-bg); color:var(--blue);">📋</span><h2 style="font-size:19px; font-weight:500; margin:0;">Lijstjes</h2></div>
+    <div id="lijstjesStrip" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; scroll-snap-type:x mandatory;"></div>
+    <div id="lijstjeInhoud" style="margin-top:12px;"></div>
+    <div class="fab-wrap"><button class="fab" style="background:var(--blue-bg); color:var(--blue);" id="btnNieuwLijstje"><span style="font-weight:800; font-size:15px;">+</span>Nieuwe lijst</button></div>
+  </section>
 </div>
 
 <nav class="bottomnav hidden" id="bottomnav">
@@ -335,6 +343,7 @@
   <button class="navitem" data-page="klussen"><span style="font-size:18px;">✅</span><span>Klussen</span></button>
   <button class="navitem" data-page="spullen"><span style="font-size:18px;">📦</span><span>Spullen</span></button>
   <button class="navitem soon" data-page="boodschappen"><span style="font-size:18px;">🛒</span><span>Bood.</span></button>
+  <button class="navitem" data-page="lijstjes"><span style="font-size:18px;">📋</span><span>Lijstjes</span></button>
 </nav>
 
 <div id="modalRoot"></div>
@@ -353,7 +362,8 @@ const NAV_ITEMS = [
   {page:"onderhoud", icon:"🔧", label:"Onderhoud", soon:false},
   {page:"klussen", icon:"✅", label:"Klussen", soon:false},
   {page:"spullen", icon:"📦", label:"Spullen", soon:false},
-  {page:"boodschappen", icon:"🛒", label:"Boodschappen", soon:true}
+  {page:"boodschappen", icon:"🛒", label:"Boodschappen", soon:true},
+  {page:"lijstjes", icon:"📋", label:"Lijstjes", soon:false}
 ];
 document.getElementById("topnav").innerHTML = NAV_ITEMS.map(n=>
   `<button class="navitem ${n.page==='dashboard'?'active':''} ${n.soon?'soon':''}" data-page="${n.page}"><span style="font-size:16px;">${n.icon}</span>${n.label}</button>`
@@ -969,6 +979,7 @@ async function initGoogle(){
       toonVerbonden();
       await laadGoogleAgendaLijst();
       await haalGoogleAgendaOp();
+      renderVakantieDashboardKaart();
     }
   }catch(e){ /* nog niet gekoppeld, gewoon de knop laten staan */ }
 }
@@ -1453,6 +1464,13 @@ function schakelPagina(page){
       renderSpullen();
     });
   }
+  if(page === "lijstjes" && lijstjes.length === 0){
+    laadLijstjes().then(async ()=>{
+      renderLijstjesStrip();
+      if(huidigLijstjeId){ await laadLijstjeItems(huidigLijstjeId); }
+      renderLijstjeInhoud();
+    });
+  }
 }
 verplaatsAgendaWidget("dashboard");
 document.querySelectorAll("nav .navitem").forEach(btn=>{
@@ -1872,6 +1890,134 @@ async function renderVakantiePlanner(){
     }}));
   });
 }
+let lijstjes = [];
+let huidigLijstjeId = null;
+let lijstjeItems = [];
+
+async function laadLijstjes(){
+  const {data, error} = await db.from('lijstjes').select('*').order('volgorde');
+  if(error){ toonDebugFout(error); return; }
+  lijstjes = data;
+  if(!huidigLijstjeId && lijstjes.length) huidigLijstjeId = lijstjes[0].id;
+}
+async function laadLijstjeItems(lijstjeId){
+  const {data, error} = await db.from('lijstje_items').select('*').eq('lijstje_id', lijstjeId).order('volgorde');
+  if(error){ toonDebugFout(error); return; }
+  lijstjeItems = data;
+}
+function renderLijstjesStrip(){
+  const strip = document.getElementById('lijstjesStrip');
+  strip.innerHTML = lijstjes.map(l=>{
+    const actief = l.id === huidigLijstjeId;
+    return `<button onclick="selecteerLijstje('${l.id}')" style="scroll-snap-align:start; flex-shrink:0; border-radius:12px; padding:10px 16px; border:2px solid ${actief?'var(--blue)':'transparent'}; background:${actief?'var(--blue-bg)':'var(--surface-2)'}; color:${actief?'var(--blue)':'var(--text)'}; text-align:left; min-width:120px;">
+      <div style="font-size:13px; font-weight:600;">${l.naam}</div>
+      <div style="font-size:11px; color:var(--text-muted);" id="voortgang-${l.id}">...</div>
+    </button>`;
+  }).join('');
+  lijstjes.forEach(async (l)=>{
+    const {count:totaal} = await db.from('lijstje_items').select('*', {count:'exact', head:true}).eq('lijstje_id', l.id);
+    const {count:klaar} = await db.from('lijstje_items').select('*', {count:'exact', head:true}).eq('lijstje_id', l.id).eq('afgevinkt', true);
+    const el = document.getElementById(`voortgang-${l.id}`);
+    if(el) el.textContent = `${klaar||0}/${totaal||0}${totaal>0 && klaar===totaal?' ✓':''}`;
+  });
+}
+window.selecteerLijstje = async function(id){
+  huidigLijstjeId = id;
+  renderLijstjesStrip();
+  await laadLijstjeItems(id);
+  renderLijstjeInhoud();
+};
+function renderLijstjeInhoud(){
+  const wrap = document.getElementById('lijstjeInhoud');
+  if(!huidigLijstjeId){ wrap.innerHTML = `<p style="color:var(--text-muted); font-size:13px;">Maak hieronder je eerste lijst aan.</p>`; return; }
+  const lijst = lijstjes.find(l=>l.id===huidigLijstjeId);
+  const klaar = lijstjeItems.filter(i=>i.afgevinkt).length;
+  wrap.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <p class="section-title" style="margin:0;">${lijst?lijst.naam:''}</p>
+        <span style="margin-left:auto; font-size:12px; color:var(--text-muted);">${klaar}/${lijstjeItems.length}${lijstjeItems.length>0 && klaar===lijstjeItems.length?' — compleet ✓':''}</span>
+        <button onclick="verwijderLijstje('${huidigLijstjeId}')" style="background:none; border:none; color:var(--red); padding:6px;">✕</button>
+      </div>
+      <div id="lijstjeItemsLijst"></div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <input type="text" id="nieuwLijstjeItemInput" placeholder="Nieuw item..." onkeydown="if(event.key==='Enter') voegLijstjeItemToe()">
+        <button class="fab" style="background:var(--blue-bg); color:var(--blue);" onclick="voegLijstjeItemToe()"><span style="font-weight:800; font-size:15px;">+</span></button>
+      </div>
+    </div>
+  `;
+  renderLijstjeItemsLijst();
+}
+function renderLijstjeItemsLijst(){
+  const el = document.getElementById('lijstjeItemsLijst');
+  el.innerHTML = lijstjeItems.length ? lijstjeItems.map(i=>`
+    <div class="boodschap-item" style="${i.afgevinkt?'opacity:.5; text-decoration:line-through;':''}">
+      <input type="checkbox" ${i.afgevinkt?'checked':''} onchange="wisselLijstjeItem('${i.id}', this.checked)">
+      <span style="flex:1;">${i.tekst}</span>
+      <span onclick="verwijderLijstjeItem('${i.id}')" style="cursor:pointer; color:var(--red); margin-left:6px;">✕</span>
+    </div>
+  `).join('') : `<p style="color:var(--text-muted); font-size:13px;">Nog leeg.</p>`;
+}
+window.wisselLijstjeItem = async function(id, afgevinkt){
+  const {error} = await db.from('lijstje_items').update({afgevinkt}).eq('id', id);
+  if(error){ toonDebugFout(error); return; }
+  const item = lijstjeItems.find(i=>i.id===id);
+  if(item) item.afgevinkt = afgevinkt;
+  renderLijstjeItemsLijst();
+  renderLijstjesStrip();
+};
+window.verwijderLijstjeItem = async function(id){
+  await db.from('lijstje_items').delete().eq('id', id);
+  lijstjeItems = lijstjeItems.filter(i=>i.id!==id);
+  renderLijstjeItemsLijst();
+  renderLijstjesStrip();
+};
+window.voegLijstjeItemToe = async function(){
+  const input = document.getElementById('nieuwLijstjeItemInput');
+  const tekst = input.value.trim();
+  if(!tekst) return;
+  const {data, error} = await db.from('lijstje_items').insert({lijstje_id: huidigLijstjeId, tekst, volgorde: lijstjeItems.length}).select().single();
+  if(error){ toonDebugFout(error); return; }
+  lijstjeItems.push(data);
+  input.value = '';
+  renderLijstjeItemsLijst();
+  renderLijstjesStrip();
+};
+window.verwijderLijstje = async function(id){
+  if(!confirm('Deze hele lijst verwijderen?')) return;
+  await db.from('lijstjes').delete().eq('id', id);
+  lijstjes = lijstjes.filter(l=>l.id!==id);
+  huidigLijstjeId = lijstjes.length ? lijstjes[0].id : null;
+  renderLijstjesStrip();
+  if(huidigLijstjeId){ await laadLijstjeItems(huidigLijstjeId); }
+  else { lijstjeItems = []; }
+  renderLijstjeInhoud();
+};
+document.getElementById('btnNieuwLijstje').addEventListener('click', ()=>{
+  toonModal(`
+    <h3>Nieuwe lijst</h3>
+    <label>Naam</label>
+    <input type="text" id="nieuweLijstjeNaam" placeholder="bv. Kampeerspullen">
+    <div id="modalError" style="color:var(--red); font-size:12px; height:14px;"></div>
+    <div class="modal-actions">
+      <button onclick="sluitModal()">Annuleren</button>
+      <button class="primary" onclick="opslaanNieuwLijstje()">Aanmaken</button>
+    </div>
+  `);
+});
+window.opslaanNieuwLijstje = async function(){
+  const naam = document.getElementById('nieuweLijstjeNaam').value.trim();
+  if(!naam){ document.getElementById('modalError').textContent = 'Vul een naam in.'; return; }
+  const {data, error} = await db.from('lijstjes').insert({naam, volgorde: lijstjes.length}).select().single();
+  if(error){ document.getElementById('modalError').textContent = 'Opslaan mislukt.'; return; }
+  lijstjes.push(data);
+  huidigLijstjeId = data.id;
+  lijstjeItems = [];
+  renderLijstjesStrip();
+  renderLijstjeInhoud();
+  sluitModal();
+};
+
 window.verwijderVakantieItem = async function(e, id){
   e.stopPropagation();
   e.preventDefault();
